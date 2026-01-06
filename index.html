@@ -15,8 +15,8 @@
     <!-- Babel (for JSX compilation in browser) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Lucide React Icons (UMD) -->
-    <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.min.js"></script>
+    <!-- Lucide React Icons (Version 0.292.0 - Last reliable UMD build) -->
+    <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
 
     <style>
         /* Custom scrollbar for better aesthetics */
@@ -42,6 +42,13 @@
     <script type="text/babel">
         // --- GLOBALS & IMPORTS REPLACEMENT ---
         const { useState, useMemo } = React;
+        
+        // Safety check for Lucide
+        if (typeof lucideReact === 'undefined') {
+            console.error("Lucide React library failed to load. Please check your internet connection or the CDN URL.");
+            document.body.innerHTML = '<div style="color:red; padding:20px; text-align:center;">Error: Library failed to load. Check console.</div>';
+        }
+
         const { 
             ChevronDown, 
             ChevronRight, 
@@ -59,8 +66,7 @@
             Users,
             BookOpen,
             Award,
-            Filter,
-            Percent
+            Filter
         } = lucideReact;
 
         // --- DONNÉES DE L'ARBRE DE COMPÉTENCES (Meta-Référentiel) ---
