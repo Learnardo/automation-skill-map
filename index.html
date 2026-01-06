@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Automatisme - Évaluation des Compétences</title>
+
+    <!-- 1. Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. Chargement de React et ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+    <!-- 3. Chargement de Babel pour interpréter le JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 4. Chargement de Lucide React (Icônes) -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.min.js"></script>
+
+    <style>
+        /* Masquer la barre de défilement pour les éléments avec la classe .hide-scrollbar */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- ADAPTATION DES IMPORTS POUR LE NAVIGATEUR ---
+        
+        // Récupération des Hooks React depuis l'objet global
+        const { useState, useMemo, useRef, useEffect } = React;
+
+        // Récupération des icônes Lucide depuis l'objet global LucideReact
+        const { 
+            ChevronDown, 
+            ChevronRight, 
+            Search, 
+            X, 
+            Cpu, 
+            Network, 
+            Code2, 
+            Layers, 
+            CheckCircle2, 
+            PlayCircle, 
+            Wrench, 
+            TrendingUp, 
+            Briefcase, 
+            Users,
+            BookOpen,
+            ArrowRight,
+            ArrowUp,
+            ArrowDown,
+            Calendar,
+            Clock,
+            BarChart3,
+            ListOrdered,
+            ClipboardList,
+            Trash2,
+            MessageCircle,
+            Sparkles,
+            Factory,
+            ShieldCheck,
+            Target,
+            Signal
+        } = LucideReact;
+
+        // --- DÉBUT DU CODE ORIGINAL (Refactorisé sans modifier le contenu) ---
+
+        // --- DONNÉES DE L'ARBRE DE COMPÉTENCES ---
+        const skillsData = [
+          {
+            id: "1",
+            title: "1. Spécification des Systèmes",
+            description: "Comprendre le besoin, modéliser le procédé et définir les exigences fonctionnelles.",
+            icon: <BookOpen className="w-5 h-5" />,
+            subSkills: [
+              { id: "1.1", title: "Analyse Fonctionnelle et Modélisation", description: "Compréhension du besoin client, GRAFCET, SysML, SADT." },
+              { id: "1.2", title: "Sûreté de Fonctionnement", description: "Analyse des risques (APR, HAZOP), SIL/PL." },
+              { id: "1.3", title: "Conformité Normative", description: "Normes industrielles (IEC, ISA) et réglementations." }
+            ]
+          },
+          {
+            id: "2",
+            title: "2. Conception Technique",
+            description: "Définir la structure matérielle, logicielle et réseau.",
+            icon: <Cpu className="w-5 h-5" />,
+            subSkills: [
+              { id: "2.1", title: "Architecture Système (API/DCS)", description: "Architecture centralisée/distribuée, choix matériel." },
+              { id: "2.2", title: "Réseaux Industriels (OT)", description: "Bus de terrain, Ethernet industriel, Protocoles." },
+              { id: "2.3", title: "Instrumentation", description: "Capteurs, actionneurs, chaînes de mesure." },
+              { id: "2.4", title: "Conception Électrotechnique", description: "Schémas électriques, armoires, CAO." },
+              { id: "2.5", title: "Cybersécurité by Design", description: "Segmentation réseau, IEC 62443." }
+            ]
+          },
+          {
+            id: "3",
+            title: "3. Développement Logiciel",
+            description: "Coder et paramétrer les applications de contrôle.",
+            icon: <Code2 className="w-5 h-5" />,
+            subSkills: [
+              { id: "3.1", title: "Programmation Automates", description: "IEC 61131-3 (Ladder, ST, SFC...)." },
+              { id: "3.2", title: "Configuration SNCC/DCS", description: "Systèmes distribués complexes." },
+              { id: "3.3", title: "Développement IHM/SCADA", description: "Supervision, ergonomie, gestion d'alarmes." },
+              { id: "3.4", title: "Régulation (PID)", description: "Boucles de régulation, réglages." },
+              { id: "3.5", title: "Robotique", description: "Intégration robots/cobots, motion control." },
+              { id: "3.6", title: "Versioning", description: "Git, SVN, gestion de configuration." }
+            ]
+          },
+          {
+            id: "4",
+            title: "4. Intégration des Systèmes",
+            description: "Assurer l'interopérabilité et la connexion.",
+            icon: <Network className="w-5 h-5" />,
+            subSkills: [
+              { id: "4.1", title: "Informatique Industrielle", description: "Bases de données (SQL), Scripts, Virtualisation." },
+              { id: "4.2", title: "Intégration MES/ERP", description: "Passerelles IT/OT." },
+              { id: "4.3", title: "IIoT & Edge", description: "MQTT, Node-RED, passerelles IoT." },
+              { id: "4.4", title: "Infrastructure OT", description: "Switches, VLANs, Serveurs." }
+            ]
+          },
+          {
+            id: "5",
+            title: "5. Validation Technique",
+            description: "Vérifier la conformité par tests.",
+            icon: <CheckCircle2 className="w-5 h-5" />,
+            subSkills: [
+              { id: "5.1", title: "Stratégie de Test", description: "Plans de validation." },
+              { id: "5.2", title: "Simulation", description: "Jumeaux numériques, Virtual Commissioning." },
+              { id: "5.3", title: "Tests FAT", description: "Acceptation en usine." },
+              { id: "5.4", title: "Qualification", description: "QI/QO (Pharma/Process)." }
+            ]
+          },
+          {
+            id: "6",
+            title: "6. Mise en Service",
+            description: "Installation et démarrage sur site.",
+            icon: <PlayCircle className="w-5 h-5" />,
+            subSkills: [
+              { id: "6.1", title: "Configuration Terrain", description: "Calibration, variateurs." },
+              { id: "6.2", title: "I/O Checkout", description: "Tests de boucles, câblage." },
+              { id: "6.3", title: "Tests SAT", description: "Acceptation sur site, démarrage." },
+              { id: "6.4", title: "Documentation & Formation", description: "DOE, transfert de compétences." }
+            ]
+          },
+          {
+            id: "7",
+            title: "7. Maintenance",
+            description: "MCO et dépannage.",
+            icon: <Wrench className="w-5 h-5" />,
+            subSkills: [
+              { id: "7.1", title: "Diagnostic", description: "Recherche de pannes." },
+              { id: "7.2", title: "Préventif/Correctif", description: "Plans de maintenance." },
+              { id: "7.3", title: "Gestion des Modifications", description: "Travaux neufs mineurs." },
+              { id: "7.4", title: "Maintenance Sécurité", description: "Patching, sauvegardes." }
+            ]
+          },
+          {
+            id: "8",
+            title: "8. Optimisation",
+            description: "Amélioration continue.",
+            icon: <TrendingUp className="w-5 h-5" />,
+            subSkills: [
+              { id: "8.1", title: "Performance (KPI)", description: "TRS, analyse de données." },
+              { id: "8.2", title: "Efficacité Énergétique", description: "Optimisation conso." },
+              { id: "8.3", title: "Contrôle Avancé", description: "APC, modèles prédictifs." },
+              { id: "8.4", title: "Revamping", description: "Gestion de l'obsolescence." }
+            ]
+          },
+          {
+            id: "9",
+            title: "9. Gestion de Projet",
+            description: "Pilotage et organisation.",
+            icon: <Briefcase className="w-5 h-5" />,
+            subSkills: [
+              { id: "9.1", title: "Méthodologie", description: "Cycle V, Agile." },
+              { id: "9.2", title: "Planification", description: "Délais, ressources." },
+              { id: "9.3", title: "Budget", description: "Chiffrage, suivi financier." },
+              { id: "9.4", title: "Coordination", description: "Management transversal." }
+            ]
+          },
+          {
+            id: "10",
+            title: "10. Soft Skills",
+            description: "Humain et relationnel.",
+            icon: <Users className="w-5 h-5" />,
+            subSkills: [
+              { id: "10.1", title: "Relation Client", description: "Posture conseil." },
+              { id: "10.2", title: "Communication", description: "Reporting, synthèse." },
+              { id: "10.3", title: "Anglais Technique", description: "Oral et écrit." },
+              { id: "10.4", title: "Sécurité (HSE)", description: "Culture sécurité chantier." }
+            ]
+          }
+        ];
+
+        // --- NOUVELLE DEFINITION DES NIVEAUX (AVEC HEURES) ---
+        const LEVEL_DETAILS = [
+          { label: "Pas d'expérience", hours: "0h", desc: "Jamais pratiqué" },
+          { label: "Initié", hours: "< 100h", desc: "Premiers acquis" },
+          { label: "Intermédiaire", hours: "100-1000h", desc: "Autonome sur tâches simples" },
+          { label: "Avancé", hours: "> 1000h", desc: "Maîtrise complète" }
+        ];
+
+        // NOUVEAU : CONSTANTE DES MOIS
+        const MONTHS = [
+          "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+          "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+        ];
+
+        // OPTIONS DE RYTHME
+        const PACE_OPTIONS = [
+          { label: "Flexible", sub: "3h / sem", value: 3 },
+          { label: "Dynamique", sub: "7h / sem", value: 7 },
+          { label: "Accéléré", sub: "14h / sem", value: 14 },
+          { label: "Intensif", sub: "21h / sem", value: 21 },
+          { label: "Immersif", sub: "35h / sem", value: 35 }
+        ];
+
+        // OPTIONS DE FORMAT
+        const FORMAT_OPTIONS = [
+          { label: "Express", sub: "< 14h", value: "express" },
+          { label: "Court", sub: "14h à 35h", value: "short" },
+          { label: "Moyen", sub: "35h à 150h", value: "medium" },
+          { label: "Long", sub: "> 150h", value: "long" }
+        ];
+
+        const MANUFACTURER_OPTIONS = ["Schneider Electric", "Siemens", "Rockwell Automation", "Omron", "Autre"];
+        const SECTOR_OPTIONS = ["Pharmaceutique", "Infrastructure", "Défense", "Agroalimentaire", "Energie", "Autre"];
+
+        // --- DEFINITION DES PACKAGES (PRESETS) ---
+        const PRESETS = [
+          // --- NIVEAU 1 : INITIATION ---
+          {
+            id: 'socle_fondamental',
+            label: 'Socle fondamental',
+            description: "Idéal pour découvrir le panorama des systèmes, lire un GRAFCET et comprendre les bases du Ladder.",
+            skills: ['1.1', '2.1', '3.1']
+          },
+
+          // --- NIVEAU 2 : MODULES EXPERTS (Courts 2-4j) ---
+          {
+            id: 'focus_qualif',
+            label: 'Qualité',
+            description: "Idéal pour valider la conformité des équipements (GAMP5, FAT/SAT) sans toucher au code.",
+            skills: ['1.3', '5.1', '5.4']
+          },
+          {
+            id: 'focus_pid',
+            label: 'Régulation Process',
+            description: "Idéal pour comprendre et régler les boucles de régulation complexes (Température, Pression).",
+            skills: ['2.3', '3.4', '8.1']
+          },
+          {
+            id: 'focus_diag',
+            label: 'Diagnostic',
+            description: "Idéal pour identifier l'origine d'une panne (capteur, câble ou automate) sans modifier le programme.",
+            skills: ['2.1', '6.2', '7.1']
+          },
+
+          // --- NIVEAU 3 : PARCOURS MÉTIERS (Longs 10j+) ---
+          {
+            id: 'maintenance_expert',
+            label: 'Expertise Système',
+            description: "Idéal pour gagner en autonomie sur le diagnostic, comprendre l'architecture et modifier le code si nécessaire.",
+            skills: ['2.1', '3.1', '6.1', '7.1', '7.4'] 
+          },
+          {
+            id: 'data_supervision',
+            label: 'Data & 4.0',
+            description: "Idéal pour développer des IHM avancées, remonter les données (SQL) et sécuriser les réseaux.",
+            skills: ['2.5', '3.3', '4.1', '4.3', '8.1']
+          },
+          {
+            id: 'conception_new',
+            label: 'Bureau d\'Études',
+            description: "Idéal pour piloter des projets neufs, dimensionner les réseaux et structurer les programmes.",
+            skills: ['1.1', '2.2', '3.1', '3.4', '5.3', '9.1']
+          }
+        ];
+
+        // --- UTILS ---
+        const checkMatch = (category, searchQuery) => {
+          if (!searchQuery) return true;
+          const lowerQuery = searchQuery.toLowerCase();
+          const catMatch = category.title.toLowerCase().includes(lowerQuery);
+          const subMatch = category.subSkills.some(sub => 
+            sub.title.toLowerCase().includes(lowerQuery) || 
+            sub.description.toLowerCase().includes(lowerQuery)
+          );
+          return catMatch || subMatch;
+        };
+
+        // --- COMPOSANTS INTERNES ---
+
+        const SkillItemSelectable = ({ subSkill, isSelected, onToggle }) => (
+          <div 
+            onClick={() => onToggle(subSkill.id)}
+            className={`
+              cursor-pointer border rounded-lg p-3 transition-all duration-200 flex items-start gap-3 relative
+              ${isSelected 
+                ? 'bg-slate-100 border-slate-500 ring-1 ring-slate-200' 
+                : 'bg-white border-slate-200 hover:border-slate-400 hover:shadow-sm'
+              }
+            `}
+          >
+            <div className="mt-0.5 flex-shrink-0">
+              <input 
+                type="checkbox"
+                checked={isSelected}
+                readOnly
+                className="w-4 h-4 text-slate-700 bg-gray-100 border-gray-300 rounded focus:ring-slate-700 pointer-events-none"
+              />
+            </div>
+            <div>
+              <h3 className={`text-sm font-semibold mb-1 ${isSelected ? 'text-slate-800' : 'text-slate-800'}`}>
+                {subSkill.title.replace(/^\d+\.\d+\.\s/, '')}
+              </h3>
+              <p className="text-xs text-slate-500 line-clamp-2">
+                {subSkill.description}
+              </p>
+            </div>
+          </div>
+        );
+
+        const PositionSelector = ({ value, onChange }) => {
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {LEVEL_DETAILS.map((level, index) => {
+                const isSelected = value === index;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => onChange(index)}
+                    className={`
+                      relative flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 text-center
+                      ${isSelected 
+                        ? 'bg-slate-800 border-slate-800 text-white shadow-md scale-105 z-10' 
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:bg-slate-50'
+                      }
+                    `}
+                  >
+                    <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                      Niveau {index}
+                    </div>
+                    <div className={`font-bold text-sm mb-1 ${isSelected ? 'text-white' : 'text-slate-800'}`}>
+                      {level.label}
+                    </div>
+                    <div className={`text-[10px] ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                      {level.hours}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        };
+
+        const CategoryGroup = ({ category, isExpanded, onToggleExpand, selectedSkills, onToggleSelection, searchQuery }) => {
+          const matchesSearch = useMemo(() => checkMatch(category, searchQuery), [category, searchQuery]);
+           
+          const filteredSubSkills = useMemo(() => {
+            if (!searchQuery) return category.subSkills;
+            return category.subSkills.filter(sub => 
+              sub.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              sub.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              category.title.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+          }, [category, searchQuery]);
+
+          const allVisibleSelected = filteredSubSkills.length > 0 && filteredSubSkills.every(s => selectedSkills.includes(s.id));
+          const someVisibleSelected = filteredSubSkills.some(s => selectedSkills.includes(s.id));
+          const isIndeterminate = someVisibleSelected && !allVisibleSelected;
+
+          const checkboxRef = useRef(null);
+
+          useEffect(() => {
+            if (checkboxRef.current) {
+              checkboxRef.current.indeterminate = isIndeterminate;
+            }
+          }, [isIndeterminate]);
+
+          if (!matchesSearch) return null;
+
+          const handleCategoryClick = (e) => {
+            e.stopPropagation(); // Prevent expansion toggle
+            const idsToToggle = filteredSubSkills.map(s => s.id);
+            onToggleSelection(idsToToggle, !allVisibleSelected); 
+          };
+
+          const shouldBeExpanded = (searchQuery && matchesSearch) ? true : isExpanded;
+
+          return (
+            <div className="border rounded-lg bg-white shadow-sm mb-3 overflow-hidden border-slate-200">
+              <div 
+                onClick={() => onToggleExpand(category.id)}
+                className={`w-full flex items-center justify-between p-4 cursor-pointer transition-colors
+                  ${shouldBeExpanded ? 'bg-slate-50' : 'bg-white hover:bg-slate-50'}
+                `}
+              >
+                <div className="flex items-center gap-4 max-w-[85%]">
+                   <div onClick={handleCategoryClick} className="cursor-pointer z-10 p-1 flex items-center justify-center">
+                     <input 
+                       ref={checkboxRef}
+                       type="checkbox" 
+                       checked={allVisibleSelected}
+                       readOnly
+                       className="w-5 h-5 text-slate-700 bg-gray-100 border-gray-300 rounded focus:ring-slate-700 cursor-pointer"
+                     />
+                   </div>
+
+                  <div className={`p-2 rounded-md ${shouldBeExpanded ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'}`}>
+                    {category.icon}
+                  </div>
+                  <div>
+                    <h2 className={`font-semibold text-lg ${shouldBeExpanded ? 'text-slate-900' : 'text-slate-700'}`}>
+                      {category.title}
+                    </h2>
+                    {!shouldBeExpanded && <p className="text-sm text-slate-500 hidden sm:block">{category.description}</p>}
+                  </div>
+                </div>
+                <div className="text-slate-400">
+                  {shouldBeExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                </div>
+              </div>
+
+              {shouldBeExpanded && (
+                <div className="p-4 pt-2 border-t border-slate-100 bg-slate-50/50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {filteredSubSkills.map((subSkill) => (
+                      <SkillItemSelectable 
+                        key={subSkill.id} 
+                        subSkill={subSkill} 
+                        isSelected={selectedSkills.includes(subSkill.id)}
+                        onToggle={(id) => onToggleSelection([id], !selectedSkills.includes(subSkill.id))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // --- MAIN APP ---
+
+        function App() {
+          const [activeTab, setActiveTab] = useState(0); 
+           
+          const [selectedSkills, setSelectedSkills] = useState([]);
+          const [skillLevels, setSkillLevels] = useState({}); 
+           
+          const [preferences, setPreferences] = useState({
+            manufacturers: [],
+            sectors: []
+          });
+
+          const [logistics, setLogistics] = useState({
+            selectedMonths: [],
+            weeklyHours: 0,
+            format: '' 
+          });
+
+          const [searchQuery, setSearchQuery] = useState("");
+          const [expandedCategories, setExpandedCategories] = useState({});
+
+          // --- HELPERS ---
+
+          const toggleCategoryExpand = (id) => {
+            setExpandedCategories(prev => ({ ...prev, [id]: !prev[id] }));
+          };
+
+          const expandAll = () => {
+            const allIds = skillsData.reduce((acc, cat) => ({...acc, [cat.id]: true}), {});
+            setExpandedCategories(allIds);
+          };
+
+          const collapseAll = () => {
+            setExpandedCategories({});
+          };
+
+          const handleSelection = (ids, shouldAdd) => {
+            setSelectedSkills(prev => {
+              if (shouldAdd) {
+                const newIds = ids.filter(id => !prev.includes(id));
+                return [...prev, ...newIds];
+              } else {
+                return prev.filter(id => !ids.includes(id));
+              }
+            });
+          };
+
+          const applyPreset = (presetIds) => {
+            const isAlreadyActive = selectedSkills.length === presetIds.length && presetIds.every(id => selectedSkills.includes(id));
+            if (isAlreadyActive) {
+                setSelectedSkills([]);
+            } else {
+                setSelectedSkills(presetIds);
+            }
+          };
+
+          const togglePreference = (type, value) => {
+            setPreferences(prev => {
+              const list = prev[type];
+              const newList = list.includes(value)
+                ? list.filter(item => item !== value)
+                : [...list, value];
+              return { ...prev, [type]: newList };
+            });
+          };
+
+          const toggleMonth = (monthIndex) => {
+            setLogistics(prev => {
+              const currentMonths = prev.selectedMonths || [];
+              const newMonths = currentMonths.includes(monthIndex)
+                ? currentMonths.filter(m => m !== monthIndex)
+                : [...currentMonths, monthIndex].sort((a, b) => a - b);
+              return { ...prev, selectedMonths: newMonths };
+            });
+          };
+
+          const moveSkill = (index, direction) => {
+            if ((direction === -1 && index === 0) || (direction === 1 && index === selectedSkills.length - 1)) return;
+            const newOrder = [...selectedSkills];
+            const item = newOrder.splice(index, 1)[0];
+            newOrder.splice(index + direction, 0, item);
+            setSelectedSkills(newOrder);
+          };
+
+          const updateLevel = (id, value) => {
+            setSkillLevels(prev => ({
+              ...prev,
+              [id]: value
+            }));
+          };
+
+          const resolvedSelectedSkills = useMemo(() => {
+            return selectedSkills.map(id => {
+              for (const cat of skillsData) {
+                const sub = cat.subSkills.find(s => s.id === id);
+                if (sub) return { ...sub, categoryTitle: cat.title, categoryIcon: cat.icon };
+              }
+              return null;
+            }).filter(Boolean);
+          }, [selectedSkills]);
+
+          const calculateDuration = () => {
+            if (!logistics.weeklyHours || !logistics.format) return null;
+
+            let minHours = 0;
+            let maxHours = 0;
+
+            switch (logistics.format) {
+              case 'express': 
+                minHours = 4;
+                maxHours = 14;
+                break;
+              case 'short': 
+                minHours = 14;
+                maxHours = 35;
+                break;
+              case 'medium': 
+                minHours = 35;
+                maxHours = 150;
+                break;
+              case 'long': 
+                minHours = 150;
+                maxHours = 300; 
+                break;
+              default:
+                return null;
+            }
+
+            const minWeeks = Math.ceil(minHours / logistics.weeklyHours);
+            const maxWeeks = Math.ceil(maxHours / logistics.weeklyHours);
+
+            if (logistics.format === 'long') {
+                return `> ${minWeeks} semaines`;
+            }
+             
+            if (minWeeks === maxWeeks) {
+                return `${minWeeks} semaine${minWeeks > 1 ? 's' : ''}`;
+            }
+
+            return `${minWeeks} à ${maxWeeks} semaines`;
+          };
+
+          // --- TABS RENDERING ---
+
+          const tabs = [
+            { id: 0, title: "1. Sélection", icon: <ClipboardList size={18} /> },
+            { id: 1, title: "2. Priorisation", icon: <ListOrdered size={18} /> },
+            { id: 2, title: "3. Positionnement", icon: <Signal size={18} /> }, 
+            { id: 3, title: "4. Plan", icon: <Calendar size={18} /> },
+          ];
+
+          const renderTabContent = () => {
+            switch (activeTab) {
+              case 0: // SELECTION
+                const activePreset = PRESETS.find(preset => 
+                  selectedSkills.length === preset.skills.length && 
+                  preset.skills.every(id => selectedSkills.includes(id))
+                );
+
+                return (
+                  <div className="animate-in fade-in duration-300">
+                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm mb-6 sticky top-4 z-20 flex flex-col gap-4">
+                       
+                      <div className="flex flex-col md:flex-row gap-3 items-center w-full">
+                        <div className="relative flex-grow w-full">
+                          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                          <input
+                            type="text"
+                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 bg-slate-50"
+                            placeholder="Rechercher une compétence à évaluer..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex gap-2 shrink-0 self-end md:self-auto">
+                          <button 
+                            onClick={expandAll}
+                            className="text-xs font-medium px-3 py-2 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors whitespace-nowrap"
+                          >
+                            Tout ouvrir
+                          </button>
+                          <button 
+                            onClick={collapseAll}
+                            className="text-xs font-medium px-3 py-2 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors whitespace-nowrap"
+                          >
+                            Tout réduire
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar border-t border-slate-100 pt-3 w-full">
+                          {PRESETS.map(preset => {
+                            const isPresetActive = selectedSkills.length === preset.skills.length && preset.skills.every(id => selectedSkills.includes(id));
+                            
+                            return (
+                              <button
+                                key={preset.id}
+                                onClick={() => applyPreset(preset.skills)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap flex items-center gap-1.5
+                                  ${isPresetActive 
+                                    ? 'bg-slate-800 text-white border-slate-800 shadow-sm' 
+                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-400'
+                                  }
+                                `}
+                              >
+                                {preset.label}
+                              </button>
+                            );
+                          })}
+                      </div>
+
+                      {activePreset && (
+                        <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 animate-in fade-in slide-in-from-top-1">
+                          <p className="text-sm text-slate-600 leading-relaxed">{activePreset.description}</p>
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div className="space-y-4">
+                      {skillsData.map(category => (
+                        <CategoryGroup 
+                          key={category.id} 
+                          category={category}
+                          isExpanded={!!expandedCategories[category.id]}
+                          onToggleExpand={toggleCategoryExpand}
+                          selectedSkills={selectedSkills}
+                          onToggleSelection={(ids, shouldAdd) => handleSelection(ids, shouldAdd)}
+                          searchQuery={searchQuery}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+
+              case 1: // PRIORISATION
+                if (selectedSkills.length === 0) return (
+                    <div className="text-center py-20 bg-white rounded-lg border border-slate-200 border-dashed">
+                        <p className="text-slate-500">Aucune compétence sélectionnée.</p>
+                        <button onClick={() => setActiveTab(0)} className="text-slate-800 font-medium mt-2 hover:underline">Retourner à la sélection</button>
+                    </div>
+                );
+                return (
+                  <div className="animate-in slide-in-from-right-4 duration-300">
+                     
+                    <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm mb-6">
+                      <div className="space-y-5">
+                        <div>
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
+                            <Factory size={14} />
+                            Écosystèmes Constructeurs
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {MANUFACTURER_OPTIONS.map(opt => (
+                              <button
+                                key={opt}
+                                onClick={() => togglePreference('manufacturers', opt)}
+                                className={`px-3 py-1.5 rounded-md text-sm transition-all border
+                                  ${preferences.manufacturers.includes(opt)
+                                    ? 'bg-slate-800 text-white border-slate-800 shadow-md'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                  }
+                                `}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
+                            <ShieldCheck size={14} />
+                            Secteurs Cibles
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {SECTOR_OPTIONS.map(opt => (
+                              <button
+                                key={opt}
+                                onClick={() => togglePreference('sectors', opt)}
+                                className={`px-3 py-1.5 rounded-md text-sm transition-all border
+                                  ${preferences.sectors.includes(opt)
+                                    ? 'bg-slate-800 text-white border-slate-800 shadow-md'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                  }
+                                `}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-2 mt-6">
+                        <h3 className="font-semibold text-slate-700">Ordre de priorité des compétences</h3>
+                        <span className="text-xs text-slate-400">Glisser ou utiliser les flèches</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {resolvedSelectedSkills.map((skill, index) => (
+                        <div key={skill.id} className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex items-center justify-between group hover:border-slate-400 transition-colors">
+                          <div className="flex items-center gap-4 overflow-hidden">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-500 font-bold text-xs shrink-0">
+                              {index + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-slate-800 truncate">{skill.title}</h4>
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                  {skill.categoryIcon && React.cloneElement(skill.categoryIcon, { size: 14, className: "text-slate-400" })}
+                                  <span className="truncate">{skill.categoryTitle.replace(/^\d+\.\s*/, '')}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button 
+                              onClick={() => moveSkill(index, -1)}
+                              disabled={index === 0}
+                              className="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ArrowUp size={18} />
+                            </button>
+                            <button 
+                              onClick={() => moveSkill(index, 1)}
+                              disabled={index === selectedSkills.length - 1}
+                              className="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ArrowDown size={18} />
+                            </button>
+                             
+                            <div className="w-px h-4 bg-slate-200 mx-1"></div>
+
+                            <button 
+                              onClick={() => handleSelection([skill.id], false)}
+                              className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
+                              title="Retirer de la sélection"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+
+              case 2: // POSITIONNEMENT
+                if (selectedSkills.length === 0) return <div className="text-center py-20"><p className="text-slate-500">Aucune compétence sélectionnée.</p></div>;
+                return (
+                  <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
+                     
+                    {resolvedSelectedSkills.map((skill) => {
+                      const currentLevel = skillLevels[skill.id] !== undefined ? skillLevels[skill.id] : 0;
+
+                      return (
+                        <div key={skill.id} className="bg-white p-5 border border-slate-200 rounded-lg shadow-sm">
+                          <div className="mb-4">
+                              <h4 className="font-bold text-slate-800 text-lg">{skill.title}</h4>
+                              <p className="text-sm text-slate-500">{skill.description}</p>
+                          </div>
+                           
+                          <div className="mt-4">
+                              <PositionSelector 
+                                 value={currentLevel}
+                                 onChange={(val) => updateLevel(skill.id, val)}
+                              />
+                          </div>
+
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+
+              case 3: // PLAN
+                const durationEstimate = calculateDuration();
+
+                return (
+                  <div className="animate-in slide-in-from-right-4 duration-300 max-w-2xl mx-auto">
+                    <div className="bg-white p-8 border border-slate-200 rounded-xl shadow-lg">
+                      <h2 className="text-2xl font-bold text-slate-900 mb-6">Planification</h2>
+                       
+                      <div className="space-y-8">
+                        
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-3">Période de disponibilité souhaitée</label>
+                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                              {MONTHS.map((month, index) => {
+                                const isSelected = logistics.selectedMonths?.includes(index);
+                                return (
+                                  <button
+                                    key={month}
+                                    onClick={() => toggleMonth(index)}
+                                    className={`py-2 px-1 text-sm rounded-lg border transition-all duration-200
+                                      ${isSelected 
+                                        ? 'bg-slate-800 border-slate-800 text-white font-medium shadow-sm' 
+                                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:bg-slate-50'
+                                      }
+                                    `}
+                                  >
+                                    {month}
+                                  </button>
+                                );
+                              })}
+                           </div>
+                           <p className="mt-2 text-xs text-slate-400">Sélectionnez un ou plusieurs mois pour définir votre fenêtre de disponibilité.</p>
+                        </div>
+
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-3">Rythme Hebdomadaire</label>
+                           
+                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                             {PACE_OPTIONS.map((option) => {
+                               const isSelected = logistics.weeklyHours === option.value;
+                               return (
+                                 <button
+                                    key={option.value}
+                                    onClick={() => setLogistics({...logistics, weeklyHours: option.value})}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200
+                                      ${isSelected 
+                                        ? 'bg-slate-800 border-slate-800 text-white shadow-md scale-105 z-10' 
+                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+                                      }
+                                    `}
+                                 >
+                                    <span className="text-sm font-bold leading-tight">{option.label}</span>
+                                    <span className={`text-[11px] font-medium mt-1 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>{option.sub}</span>
+                                 </button>
+                               )
+                             })}
+                           </div>
+                        </div>
+
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-3">Format envisageable</label>
+                           
+                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                             {FORMAT_OPTIONS.map((option) => {
+                               const isSelected = logistics.format === option.value;
+                               return (
+                                 <button
+                                    key={option.value}
+                                    onClick={() => setLogistics({...logistics, format: option.value})}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200
+                                      ${isSelected 
+                                        ? 'bg-slate-800 border-slate-800 text-white shadow-md scale-105 z-10' 
+                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+                                      }
+                                    `}
+                                 >
+                                    <span className="text-sm font-bold leading-tight">{option.label}</span>
+                                    <span className={`text-[11px] font-medium mt-1 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>{option.sub}</span>
+                                 </button>
+                               )
+                             })}
+                           </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-slate-100">
+                          <h3 className="font-semibold text-slate-900 mb-3">Récapitulatif Préliminaire</h3>
+                          <ul className="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-lg">
+                            <li className="flex justify-between">
+                              <span>Compétences ciblées :</span>
+                              <span className="font-medium text-slate-900">{selectedSkills.length}</span>
+                            </li>
+                            <li className="flex justify-between items-start">
+                              <span>Période :</span>
+                              <span className="font-medium text-slate-900 text-right max-w-[60%]">
+                                {logistics.selectedMonths && logistics.selectedMonths.length > 0 
+                                  ? logistics.selectedMonths.map(i => MONTHS[i]).join(', ')
+                                  : 'Non définie'
+                                }
+                              </span>
+                            </li>
+                            <li className="flex justify-between">
+                              <span>Volume Hebdo :</span>
+                              <span className="font-medium text-slate-900">{logistics.weeklyHours ? `${logistics.weeklyHours}h` : 'Non défini'}</span>
+                            </li>
+                            <li className="flex justify-between border-t border-slate-200 pt-2 mt-2">
+                               <span className="text-slate-800 font-medium">Durée estimée :</span>
+                               <span className="font-bold text-slate-800">
+                                 {durationEstimate || '...'}
+                               </span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+
+              default: return null;
+            }
+          };
+
+          return (
+            <div className="min-h-screen bg-slate-100 font-sans text-slate-900 pb-20">
+               
+              {/* HEADER STEPPER */}
+              <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+                <div className="max-w-5xl mx-auto">
+                  <div className="flex flex-col md:flex-row items-center justify-between px-4 py-4 md:py-0 md:h-20 gap-4">
+                     <div className="flex items-center gap-3 shrink-0 self-start md:self-auto pt-2 md:pt-0">
+                        <div className="p-2 bg-slate-800 rounded-lg shadow-sm text-white">
+                           <MessageCircle size={24} />
+                        </div>
+                        <div>
+                           <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-0.5">Entretien de découverte</p>
+                           <h1 className="text-xl font-bold leading-none text-slate-900">Automatique</h1>
+                        </div>
+                     </div>
+
+                     <nav className="flex items-center gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+                        {tabs.map((tab, idx) => {
+                          const isActive = activeTab === idx;
+                          const isCompleted = activeTab > idx;
+                           
+                          return (
+                            <button
+                              key={tab.id}
+                              onClick={() => setActiveTab(tab.id)}
+                              className={`
+                                flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
+                                ${isActive 
+                                  ? 'bg-slate-800 text-white shadow-md' 
+                                  : isCompleted 
+                                    ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' 
+                                    : 'text-slate-500 hover:bg-slate-100'
+                                }
+                              `}
+                            >
+                              {tab.icon}
+                              <span className={`${isActive ? 'inline' : 'hidden md:inline'}`}>{tab.title}</span>
+                              {idx === 0 && selectedSkills.length > 0 && (
+                                <span className={`ml-1 text-[10px] px-1.5 rounded-full ${isActive ? 'bg-white text-slate-800' : 'bg-slate-300 text-slate-800'}`}>
+                                  {selectedSkills.length}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                     </nav>
+                  </div>
+                </div>
+              </header>
+
+              <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                {renderTabContent()}
+              </main>
+
+            </div>
+          );
+        }
+
+        // --- RENDER DE L'APPLICATION ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+</html>
