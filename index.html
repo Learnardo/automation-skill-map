@@ -1,629 +1,678 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  Search, 
-  X, 
-  Cpu, 
-  Network, 
-  Code2, 
-  Layers, 
-  CheckCircle2, 
-  PlayCircle, 
-  Wrench, 
-  TrendingUp, 
-  Briefcase, 
-  Users,
-  BookOpen,
-  Award,
-  Filter,
-  Percent
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbre de Compétences - Ingénierie Automatisme</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (Production) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (for JSX compilation in browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide React Icons (UMD) -->
+    <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.min.js"></script>
 
-// --- DONNÉES DE L'ARBRE DE COMPÉTENCES (Meta-Référentiel) ---
-const skillsData = [
-  {
-    id: "1",
-    title: "1. Spécification des Systèmes",
-    description: "Comprendre le besoin, modéliser le procédé et définir les exigences fonctionnelles, sécuritaires et réglementaires.",
-    icon: <BookOpen className="w-5 h-5" />,
-    subSkills: [
-      { id: "1.1", title: "Analyse Fonctionnelle et Modélisation", description: "Compréhension du besoin client et du procédé à automatiser. Modélisation du comportement attendu (GRAFCET, SysML, SADT), rédaction des Spécifications Fonctionnelles Détaillées (AFD)." },
-      { id: "1.2", title: "Sûreté de Fonctionnement et Analyse de Risques", description: "Analyse préliminaire des risques (APR), HAZOP, AMDEC. Définition des exigences de sécurité fonctionnelle (SIL/PL)." },
-      { id: "1.3", title: "Conformité Normative et Réglementaire", description: "Identification et intégration des normes industrielles (IEC, ISA), des réglementations sectorielles et des directives applicables." }
-    ]
-  },
-  {
-    id: "2",
-    title: "2. Conception Technique",
-    description: "Définir la structure matérielle, logicielle et réseau du système de contrôle-commande.",
-    icon: <Cpu className="w-5 h-5" />,
-    subSkills: [
-      { id: "2.1", title: "Architecture Système (API, SNCC/DCS)", description: "Conception de l'architecture de contrôle (centralisée, distribuée, redondante). Dimensionnement et sélection des équipements." },
-      { id: "2.2", title: "Réseaux Industriels (OT)", description: "Structuration des architectures réseaux OT. Sélection des supports physiques et des protocoles de communication adaptés." },
-      { id: "2.3", title: "Instrumentation et Actionnement", description: "Sélection, dimensionnement et intégration des capteurs et actionneurs. Compréhension des chaînes de mesure et de commande." },
-      { id: "2.4", title: "Conception Électrotechnique (CAO/DAO)", description: "Conception des armoires électriques (puissance et commande). Utilisation des logiciels de CAO/DAO." },
-      { id: "2.5", title: "Cybersécurité by Design", description: "Intégration de la sécurité dès la conception (IEC 62443). Segmentation réseau (Modèle Purdue)." }
-    ]
-  },
-  {
-    id: "3",
-    title: "3. Développement Logiciel",
-    description: "Coder et paramétrer les applications de contrôle, de supervision et de suivi.",
-    icon: <Code2 className="w-5 h-5" />,
-    subSkills: [
-      { id: "3.1", title: "Programmation d'Automates (IEC 61131-3)", description: "Maîtrise des langages normalisés (Ladder, ST, FBD, SFC). Structuration modulaire, développement de bibliothèques." },
-      { id: "3.2", title: "Configuration SNCC/DCS", description: "Paramétrage et programmation des systèmes de contrôle distribués pour les procédés complexes." },
-      { id: "3.3", title: "Développement IHM et SCADA", description: "Conception d'Interfaces Homme-Machine et de systèmes de Supervision. Ergonomie, gestion des alarmes." },
-      { id: "3.4", title: "Régulation et Contrôle (PID)", description: "Mise en œuvre et réglage initial des boucles de régulation (PID, cascade)." },
-      { id: "3.5", title: "Robotique et Motion Control", description: "Intégration et programmation de robots/cobots. Contrôle d'axes pour des mouvements précis." },
-      { id: "3.6", title: "Gestion de Configuration Logicielle", description: "Utilisation d'outils de versioning pour le suivi des modifications et l'assurance qualité du code." }
-    ]
-  },
-  {
-    id: "4",
-    title: "4. Intégration des Systèmes",
-    description: "Assurer l'interopérabilité des systèmes industriels et leur connexion sécurisée.",
-    icon: <Network className="w-5 h-5" />,
-    subSkills: [
-      { id: "4.1", title: "Informatique Industrielle et Bases de Données", description: "Gestion des bases de données. Virtualisation. Développement de scripts." },
-      { id: "4.2", title: "Intégration MES et ERP", description: "Interface entre les systèmes de contrôle (OT) et les systèmes de gestion (ERP/MES)." },
-      { id: "4.3", title: "Solutions IIoT et Edge Computing", description: "Mise en œuvre de l'IIoT. Utilisation de protocoles IoT (MQTT)." },
-      { id: "4.4", title: "Infrastructure OT", description: "Administration système de base, configuration des équipements réseau." }
-    ]
-  },
-  {
-    id: "5",
-    title: "5. Validation Technique",
-    description: "Vérifier la conformité du système aux spécifications par simulation et tests.",
-    icon: <CheckCircle2 className="w-5 h-5" />,
-    subSkills: [
-      { id: "5.1", title: "Stratégie de Test et Plan de Validation", description: "Élaboration des plans de validation globaux." },
-      { id: "5.2", title: "Simulation et Jumeaux Numériques", description: "Utilisation d'outils de simulation pour tester les programmes (Virtual Commissioning)." },
-      { id: "5.3", title: "Tests en Plateforme (FAT)", description: "Rédaction et exécution des protocoles de Factory Acceptance Tests (FAT)." },
-      { id: "5.4", title: "Qualification (QI/QO)", description: "Exécution des protocoles de Qualification d'Installation et Opérationnelle." }
-    ]
-  },
-  {
-    id: "6",
-    title: "6. Mise en Service",
-    description: "Installer, configurer sur site et assurer le démarrage de l'installation.",
-    icon: <PlayCircle className="w-5 h-5" />,
-    subSkills: [
-      { id: "6.1", title: "Configuration et Paramétrage Terrain", description: "Paramétrage des équipements sur site, calibration, réglage des variateurs." },
-      { id: "6.2", title: "Vérification des E/S (I/O Checkout)", description: "Vérification systématique du câblage et du bon fonctionnement de toutes les entrées/sorties." },
-      { id: "6.3", title: "Commissioning et Tests sur Site (SAT)", description: "Mise en route progressive. Exécution des Site Acceptance Tests (SAT)." },
-      { id: "6.4", title: "Documentation (DOE/As-Built) et Formation", description: "Consolidation du Dossier des Ouvrages Exécutés. Formation des équipes." }
-    ]
-  },
-  {
-    id: "7",
-    title: "7. Maintenance Opérationnelle",
-    description: "Assurer le Maintien en Condition Opérationnelle (MCO) et de Sécurité.",
-    icon: <Wrench className="w-5 h-5" />,
-    subSkills: [
-      { id: "7.1", title: "Diagnostic et Dépannage", description: "Analyse rapide et résolution de pannes complexes." },
-      { id: "7.2", title: "Maintenance Préventive et Corrective", description: "Exécution des plans de maintenance. Gestion des sauvegardes." },
-      { id: "7.3", title: "Gestion des Modifications (MOC)", description: "Procédures structurées pour gérer les évolutions mineures." },
-      { id: "7.4", title: "Cybersécurité (MCO Sécurité)", description: "Patch Management, gestion des accès et détection d'intrusions." }
-    ]
-  },
-  {
-    id: "8",
-    title: "8. Optimisation des Performances",
-    description: "Améliorer la performance et l'efficacité des installations existantes.",
-    icon: <TrendingUp className="w-5 h-5" />,
-    subSkills: [
-      { id: "8.1", title: "Analyse de Performance (KPI)", description: "Analyse des indicateurs clés (ex: TRS)." },
-      { id: "8.2", title: "Efficacité Énergétique", description: "Optimisation des automatismes pour réduire la consommation." },
-      { id: "8.3", title: "Contrôle Avancé", description: "Stratégies de contrôle prédictif, adaptatif." },
-      { id: "8.4", title: "Gestion de l'Obsolescence", description: "Planification de projets de modernisation (Revamping/Rétrofit)." }
-    ]
-  },
-  {
-    id: "9",
-    title: "9. Pilotage de Projet",
-    description: "Gérer les aspects méthodologiques et organisationnels des projets.",
-    icon: <Briefcase className="w-5 h-5" />,
-    subSkills: [
-      { id: "9.1", title: "Méthodologie de Projet", description: "Cycle V, Agile." },
-      { id: "9.2", title: "Planification et Suivi", description: "Gantt, gestion des ressources." },
-      { id: "9.3", title: "Chiffrage et Budget", description: "Estimation des coûts et suivi." },
-      { id: "9.4", title: "Gestion des Risques Projet", description: "Mitigation des risques." },
-      { id: "9.5", title: "Coordination Technique", description: "Encadrement et coordination métier." }
-    ]
-  },
-  {
-    id: "10",
-    title: "10. Compétences Transverses",
-    description: "Compétences comportementales et relationnelles.",
-    icon: <Users className="w-5 h-5" />,
-    subSkills: [
-      { id: "10.1", title: "Relation Client et Fournisseur", description: "Communication, négociation." },
-      { id: "10.2", title: "Communication Technique", description: "Rédaction, anglais technique." },
-      { id: "10.3", title: "Résolution de Problèmes", description: "Approche systémique." },
-      { id: "10.4", title: "Veille Technologique", description: "Industrie 4.0, IA." },
-      { id: "10.5", title: "Culture HSE", description: "Sécurité sur site industriel." }
-    ]
-  }
-];
+    <style>
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100">
+    <div id="root"></div>
 
-// --- DONNÉES DE STRUCTURE (PHASES) ---
-const phases = [
-  { title: "Ingénierie", ids: ["1", "2"] },
-  { title: "Réalisation", ids: ["3", "4"] },
-  { title: "Déploiement opérationnel", ids: ["5", "6"] },
-  { title: "Exploitation", ids: ["7", "8"] },
-  { title: "Transverse", ids: ["9", "10"] }
-];
+    <script type="text/babel">
+        // --- GLOBALS & IMPORTS REPLACEMENT ---
+        const { useState, useMemo } = React;
+        const { 
+            ChevronDown, 
+            ChevronRight, 
+            Search, 
+            X, 
+            Cpu, 
+            Network, 
+            Code2, 
+            Layers, 
+            CheckCircle2, 
+            PlayCircle, 
+            Wrench, 
+            TrendingUp, 
+            Briefcase, 
+            Users,
+            BookOpen,
+            Award,
+            Filter,
+            Percent
+        } = lucideReact;
 
-// --- DONNÉES DE CERTIFICATION ---
-const certificationsData = {
-  "RNCP38713": {
-    id: "RNCP38713",
-    label: "TP - Technicien supérieur en automatique et informatique industrielle (RNCP38713)",
-    description: "Titre professionnel de niveau 5. Le titulaire conçoit, développe et met en service des systèmes de contrôle-commande et de supervision.",
-    categoryMappings: {
-      "1": { block: "BC01", title: "Bloc 1 - Étudier et développer contrôle-commande", match: 40 },
-      "2": { block: "BC01/BC02", title: "Bloc 1 & 2 - Conception Technique", match: 30 },
-      "3": { block: "BC01/BC02", title: "Bloc 1 & 2 - Dév. Automatisme & IHM", match: 85 },
-      "5": { block: "BC03", title: "Bloc 3 - Validation & Tests", match: 50 },
-      "6": { block: "BC03", title: "Bloc 3 - Mise en service", match: 90 },
-    },
-    skillMappings: {
-      "1.1": { code: "BC01 - Compétence 1", label: "Analyser l'application de contrôle-commande d'une installation ou d'un équipement.", match: 90 },
-      "3.1": { code: "BC01 - Compétence 2", label: "Développer et mettre au point les programmes d'automatisme de l'application de contrôle-commande.", match: 100 },
-      "2.3": { code: "BC01 - Compétence 3", label: "Développer et mettre au point la communication [...] capteurs-actionneurs de technologie, y compris IO-Link.", match: 60 },
-      "3.3": { code: "BC02 - Compétence 1 & 2", label: "Faire la conception technique [...] et développer l'application de supervision ou d'IHM.", match: 100 },
-      "2.2": { code: "BC02 - Compétence 3", label: "Développer et mettre au point la communication entre l'application de supervision et les différents équipements.", match: 50 },
-      "6.2": { code: "BC03 - Compétence 1", label: "Vérifier le câblage électrique [...] Effectuer les tests de synchronisation.", match: 95 },
-      "5.3": { code: "BC03 - Compétence 2", label: "Effectuer les tests d'acceptation usine (FAT) des équipements.", match: 100 },
-      "6.1": { code: "BC03 - Compétence 2", label: "Mettre en service les équipements d'automatismes.", match: 90 },
-      "6.3": { code: "BC03 - Compétence 3", label: "Démarrer l'exploitation [...] Effectuer les tests d'acceptation site client (SAT).", match: 100 }
-    }
-  }
-};
+        // --- DONNÉES DE L'ARBRE DE COMPÉTENCES (Meta-Référentiel) ---
+        const skillsData = [
+          {
+            id: "1",
+            title: "1. Spécification des Systèmes",
+            description: "Comprendre le besoin, modéliser le procédé et définir les exigences fonctionnelles, sécuritaires et réglementaires.",
+            icon: <BookOpen className="w-5 h-5" />,
+            subSkills: [
+              { id: "1.1", title: "Analyse Fonctionnelle et Modélisation", description: "Compréhension du besoin client et du procédé à automatiser. Modélisation du comportement attendu (GRAFCET, SysML, SADT), rédaction des Spécifications Fonctionnelles Détaillées (AFD)." },
+              { id: "1.2", title: "Sûreté de Fonctionnement et Analyse de Risques", description: "Analyse préliminaire des risques (APR), HAZOP, AMDEC. Définition des exigences de sécurité fonctionnelle (SIL/PL)." },
+              { id: "1.3", title: "Conformité Normative et Réglementaire", description: "Identification et intégration des normes industrielles (IEC, ISA), des réglementations sectorielles et des directives applicables." }
+            ]
+          },
+          {
+            id: "2",
+            title: "2. Conception Technique",
+            description: "Définir la structure matérielle, logicielle et réseau du système de contrôle-commande.",
+            icon: <Cpu className="w-5 h-5" />,
+            subSkills: [
+              { id: "2.1", title: "Architecture Système (API, SNCC/DCS)", description: "Conception de l'architecture de contrôle (centralisée, distribuée, redondante). Dimensionnement et sélection des équipements." },
+              { id: "2.2", title: "Réseaux Industriels (OT)", description: "Structuration des architectures réseaux OT. Sélection des supports physiques et des protocoles de communication adaptés." },
+              { id: "2.3", title: "Instrumentation et Actionnement", description: "Sélection, dimensionnement et intégration des capteurs et actionneurs. Compréhension des chaînes de mesure et de commande." },
+              { id: "2.4", title: "Conception Électrotechnique (CAO/DAO)", description: "Conception des armoires électriques (puissance et commande). Utilisation des logiciels de CAO/DAO." },
+              { id: "2.5", title: "Cybersécurité by Design", description: "Intégration de la sécurité dès la conception (IEC 62443). Segmentation réseau (Modèle Purdue)." }
+            ]
+          },
+          {
+            id: "3",
+            title: "3. Développement Logiciel",
+            description: "Coder et paramétrer les applications de contrôle, de supervision et de suivi.",
+            icon: <Code2 className="w-5 h-5" />,
+            subSkills: [
+              { id: "3.1", title: "Programmation d'Automates (IEC 61131-3)", description: "Maîtrise des langages normalisés (Ladder, ST, FBD, SFC). Structuration modulaire, développement de bibliothèques." },
+              { id: "3.2", title: "Configuration SNCC/DCS", description: "Paramétrage et programmation des systèmes de contrôle distribués pour les procédés complexes." },
+              { id: "3.3", title: "Développement IHM et SCADA", description: "Conception d'Interfaces Homme-Machine et de systèmes de Supervision. Ergonomie, gestion des alarmes." },
+              { id: "3.4", title: "Régulation et Contrôle (PID)", description: "Mise en œuvre et réglage initial des boucles de régulation (PID, cascade)." },
+              { id: "3.5", title: "Robotique et Motion Control", description: "Intégration et programmation de robots/cobots. Contrôle d'axes pour des mouvements précis." },
+              { id: "3.6", title: "Gestion de Configuration Logicielle", description: "Utilisation d'outils de versioning pour le suivi des modifications et l'assurance qualité du code." }
+            ]
+          },
+          {
+            id: "4",
+            title: "4. Intégration des Systèmes",
+            description: "Assurer l'interopérabilité des systèmes industriels et leur connexion sécurisée.",
+            icon: <Network className="w-5 h-5" />,
+            subSkills: [
+              { id: "4.1", title: "Informatique Industrielle et Bases de Données", description: "Gestion des bases de données. Virtualisation. Développement de scripts." },
+              { id: "4.2", title: "Intégration MES et ERP", description: "Interface entre les systèmes de contrôle (OT) et les systèmes de gestion (ERP/MES)." },
+              { id: "4.3", title: "Solutions IIoT et Edge Computing", description: "Mise en œuvre de l'IIoT. Utilisation de protocoles IoT (MQTT)." },
+              { id: "4.4", title: "Infrastructure OT", description: "Administration système de base, configuration des équipements réseau." }
+            ]
+          },
+          {
+            id: "5",
+            title: "5. Validation Technique",
+            description: "Vérifier la conformité du système aux spécifications par simulation et tests.",
+            icon: <CheckCircle2 className="w-5 h-5" />,
+            subSkills: [
+              { id: "5.1", title: "Stratégie de Test et Plan de Validation", description: "Élaboration des plans de validation globaux." },
+              { id: "5.2", title: "Simulation et Jumeaux Numériques", description: "Utilisation d'outils de simulation pour tester les programmes (Virtual Commissioning)." },
+              { id: "5.3", title: "Tests en Plateforme (FAT)", description: "Rédaction et exécution des protocoles de Factory Acceptance Tests (FAT)." },
+              { id: "5.4", title: "Qualification (QI/QO)", description: "Exécution des protocoles de Qualification d'Installation et Opérationnelle." }
+            ]
+          },
+          {
+            id: "6",
+            title: "6. Mise en Service",
+            description: "Installer, configurer sur site et assurer le démarrage de l'installation.",
+            icon: <PlayCircle className="w-5 h-5" />,
+            subSkills: [
+              { id: "6.1", title: "Configuration et Paramétrage Terrain", description: "Paramétrage des équipements sur site, calibration, réglage des variateurs." },
+              { id: "6.2", title: "Vérification des E/S (I/O Checkout)", description: "Vérification systématique du câblage et du bon fonctionnement de toutes les entrées/sorties." },
+              { id: "6.3", title: "Commissioning et Tests sur Site (SAT)", description: "Mise en route progressive. Exécution des Site Acceptance Tests (SAT)." },
+              { id: "6.4", title: "Documentation (DOE/As-Built) et Formation", description: "Consolidation du Dossier des Ouvrages Exécutés. Formation des équipes." }
+            ]
+          },
+          {
+            id: "7",
+            title: "7. Maintenance Opérationnelle",
+            description: "Assurer le Maintien en Condition Opérationnelle (MCO) et de Sécurité.",
+            icon: <Wrench className="w-5 h-5" />,
+            subSkills: [
+              { id: "7.1", title: "Diagnostic et Dépannage", description: "Analyse rapide et résolution de pannes complexes." },
+              { id: "7.2", title: "Maintenance Préventive et Corrective", description: "Exécution des plans de maintenance. Gestion des sauvegardes." },
+              { id: "7.3", title: "Gestion des Modifications (MOC)", description: "Procédures structurées pour gérer les évolutions mineures." },
+              { id: "7.4", title: "Cybersécurité (MCO Sécurité)", description: "Patch Management, gestion des accès et détection d'intrusions." }
+            ]
+          },
+          {
+            id: "8",
+            title: "8. Optimisation des Performances",
+            description: "Améliorer la performance et l'efficacité des installations existantes.",
+            icon: <TrendingUp className="w-5 h-5" />,
+            subSkills: [
+              { id: "8.1", title: "Analyse de Performance (KPI)", description: "Analyse des indicateurs clés (ex: TRS)." },
+              { id: "8.2", title: "Efficacité Énergétique", description: "Optimisation des automatismes pour réduire la consommation." },
+              { id: "8.3", title: "Contrôle Avancé", description: "Stratégies de contrôle prédictif, adaptatif." },
+              { id: "8.4", title: "Gestion de l'Obsolescence", description: "Planification de projets de modernisation (Revamping/Rétrofit)." }
+            ]
+          },
+          {
+            id: "9",
+            title: "9. Pilotage de Projet",
+            description: "Gérer les aspects méthodologiques et organisationnels des projets.",
+            icon: <Briefcase className="w-5 h-5" />,
+            subSkills: [
+              { id: "9.1", title: "Méthodologie de Projet", description: "Cycle V, Agile." },
+              { id: "9.2", title: "Planification et Suivi", description: "Gantt, gestion des ressources." },
+              { id: "9.3", title: "Chiffrage et Budget", description: "Estimation des coûts et suivi." },
+              { id: "9.4", title: "Gestion des Risques Projet", description: "Mitigation des risques." },
+              { id: "9.5", title: "Coordination Technique", description: "Encadrement et coordination métier." }
+            ]
+          },
+          {
+            id: "10",
+            title: "10. Compétences Transverses",
+            description: "Compétences comportementales et relationnelles.",
+            icon: <Users className="w-5 h-5" />,
+            subSkills: [
+              { id: "10.1", title: "Relation Client et Fournisseur", description: "Communication, négociation." },
+              { id: "10.2", title: "Communication Technique", description: "Rédaction, anglais technique." },
+              { id: "10.3", title: "Résolution de Problèmes", description: "Approche systémique." },
+              { id: "10.4", title: "Veille Technologique", description: "Industrie 4.0, IA." },
+              { id: "10.5", title: "Culture HSE", description: "Sécurité sur site industriel." }
+            ]
+          }
+        ];
 
-// --- LOGIQUE DE FILTRAGE COMMUNE ---
-const checkMatch = (category, searchQuery) => {
-  if (!searchQuery) return true;
-  const lowerQuery = searchQuery.toLowerCase();
-  const catMatch = category.title.toLowerCase().includes(lowerQuery);
-  const subMatch = category.subSkills.some(sub => 
-    sub.title.toLowerCase().includes(lowerQuery) || 
-    sub.description.toLowerCase().includes(lowerQuery)
-  );
-  return catMatch || subMatch;
-};
+        // --- DONNÉES DE STRUCTURE (PHASES) ---
+        const phases = [
+          { title: "Ingénierie", ids: ["1", "2"] },
+          { title: "Réalisation", ids: ["3", "4"] },
+          { title: "Déploiement opérationnel", ids: ["5", "6"] },
+          { title: "Exploitation", ids: ["7", "8"] },
+          { title: "Transverse", ids: ["9", "10"] }
+        ];
 
-// --- COMPOSANTS UI ---
+        // --- DONNÉES DE CERTIFICATION ---
+        const certificationsData = {
+          "RNCP38713": {
+            id: "RNCP38713",
+            label: "TP - Technicien supérieur en automatique et informatique industrielle (RNCP38713)",
+            description: "Titre professionnel de niveau 5. Le titulaire conçoit, développe et met en service des systèmes de contrôle-commande et de supervision.",
+            categoryMappings: {
+              "1": { block: "BC01", title: "Bloc 1 - Étudier et développer contrôle-commande", match: 40 },
+              "2": { block: "BC01/BC02", title: "Bloc 1 & 2 - Conception Technique", match: 30 },
+              "3": { block: "BC01/BC02", title: "Bloc 1 & 2 - Dév. Automatisme & IHM", match: 85 },
+              "5": { block: "BC03", title: "Bloc 3 - Validation & Tests", match: 50 },
+              "6": { block: "BC03", title: "Bloc 3 - Mise en service", match: 90 },
+            },
+            skillMappings: {
+              "1.1": { code: "BC01 - Compétence 1", label: "Analyser l'application de contrôle-commande d'une installation ou d'un équipement.", match: 90 },
+              "3.1": { code: "BC01 - Compétence 2", label: "Développer et mettre au point les programmes d'automatisme de l'application de contrôle-commande.", match: 100 },
+              "2.3": { code: "BC01 - Compétence 3", label: "Développer et mettre au point la communication [...] capteurs-actionneurs de technologie, y compris IO-Link.", match: 60 },
+              "3.3": { code: "BC02 - Compétence 1 & 2", label: "Faire la conception technique [...] et développer l'application de supervision ou d'IHM.", match: 100 },
+              "2.2": { code: "BC02 - Compétence 3", label: "Développer et mettre au point la communication entre l'application de supervision et les différents équipements.", match: 50 },
+              "6.2": { code: "BC03 - Compétence 1", label: "Vérifier le câblage électrique [...] Effectuer les tests de synchronisation.", match: 95 },
+              "5.3": { code: "BC03 - Compétence 2", label: "Effectuer les tests d'acceptation usine (FAT) des équipements.", match: 100 },
+              "6.1": { code: "BC03 - Compétence 2", label: "Mettre en service les équipements d'automatismes.", match: 90 },
+              "6.3": { code: "BC03 - Compétence 3", label: "Démarrer l'exploitation [...] Effectuer les tests d'acceptation site client (SAT).", match: 100 }
+            }
+          }
+        };
 
-const ProgressBar = ({ percentage, className = "" }) => (
-  <div className={`h-1.5 w-full bg-slate-100 rounded-full overflow-hidden ${className}`}>
-    <div 
-      className="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
-      style={{ width: `${percentage}%` }}
-    />
-  </div>
-);
+        // --- LOGIQUE DE FILTRAGE COMMUNE ---
+        const checkMatch = (category, searchQuery) => {
+          if (!searchQuery) return true;
+          const lowerQuery = searchQuery.toLowerCase();
+          const catMatch = category.title.toLowerCase().includes(lowerQuery);
+          const subMatch = category.subSkills.some(sub => 
+            sub.title.toLowerCase().includes(lowerQuery) || 
+            sub.description.toLowerCase().includes(lowerQuery)
+          );
+          return catMatch || subMatch;
+        };
 
-const MatchBadge = ({ percentage }) => {
-  let colorClass = "bg-slate-100 text-slate-600";
-  if (percentage >= 80) colorClass = "bg-green-100 text-green-700 border-green-200";
-  else if (percentage >= 50) colorClass = "bg-blue-100 text-blue-700 border-blue-200";
-  else if (percentage > 0) colorClass = "bg-orange-50 text-orange-700 border-orange-100";
+        // --- COMPOSANTS UI ---
 
-  return (
-    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${colorClass}`}>
-      {percentage}%
-    </span>
-  );
-};
-
-const Modal = ({ isOpen, onClose, skill, certData, selectedCert }) => {
-  if (!isOpen || !skill) return null;
-
-  const parentCategory = skillsData.find(cat => cat.id === skill.id.split('.')[0]);
-  const parentTitle = parentCategory ? parentCategory.title.replace(/^\d+\.\s/, '') : "";
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div 
-        className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div className="flex items-start justify-between p-6 border-b border-slate-100 bg-slate-50">
-          <div className="flex flex-col gap-1">
-             {parentCategory && (
-               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-                  <span>{parentTitle}</span>
-               </div>
-             )}
-             <h3 className="text-xl font-bold text-slate-900 leading-tight pr-4">
-              {skill.title}
-             </h3>
+        const ProgressBar = ({ percentage, className = "" }) => (
+          <div className={`h-1.5 w-full bg-slate-100 rounded-full overflow-hidden ${className}`}>
+            <div 
+              className="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${percentage}%` }}
+            />
           </div>
-          <button 
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full p-1 transition-colors -mr-2 -mt-2"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div className="p-6">
-           <div className="mb-6">
-             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description Meta-Référentiel</h4>
-             <p className="text-slate-600 leading-relaxed text-base">
-              {skill.description}
-             </p>
-           </div>
+        );
 
-           {selectedCert && certData && (
-             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-in slide-in-from-bottom-2 relative overflow-hidden">
-               <Award className="absolute -right-4 -bottom-4 text-blue-100 w-24 h-24 rotate-12" />
-               <div className="relative z-10">
-                 <div className="flex items-center justify-between mb-3">
-                   <div className="flex items-center gap-2 text-blue-800 font-bold text-sm">
-                     <Award size={16} />
-                     <span>Correspondance Référentiel TP</span>
+        const MatchBadge = ({ percentage }) => {
+          let colorClass = "bg-slate-100 text-slate-600";
+          if (percentage >= 80) colorClass = "bg-green-100 text-green-700 border-green-200";
+          else if (percentage >= 50) colorClass = "bg-blue-100 text-blue-700 border-blue-200";
+          else if (percentage > 0) colorClass = "bg-orange-50 text-orange-700 border-orange-100";
+
+          return (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${colorClass}`}>
+              {percentage}%
+            </span>
+          );
+        };
+
+        const Modal = ({ isOpen, onClose, skill, certData, selectedCert }) => {
+          if (!isOpen || !skill) return null;
+
+          const parentCategory = skillsData.find(cat => cat.id === skill.id.split('.')[0]);
+          const parentTitle = parentCategory ? parentCategory.title.replace(/^\d+\.\s/, '') : "";
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div 
+                className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div className="flex items-start justify-between p-6 border-b border-slate-100 bg-slate-50">
+                  <div className="flex flex-col gap-1">
+                     {parentCategory && (
+                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                         <span>{parentTitle}</span>
+                       </div>
+                     )}
+                     <h3 className="text-xl font-bold text-slate-900 leading-tight pr-4">
+                      {skill.title}
+                     </h3>
+                  </div>
+                  <button 
+                    onClick={onClose}
+                    className="text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full p-1 transition-colors -mr-2 -mt-2"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                
+                <div className="p-6">
+                   <div className="mb-6">
+                     <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description Meta-Référentiel</h4>
+                     <p className="text-slate-600 leading-relaxed text-base">
+                      {skill.description}
+                     </p>
                    </div>
-                   <MatchBadge percentage={certData.match} />
-                 </div>
-                 
-                 <div className="space-y-2">
-                   <div className="inline-block bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
-                     {certData.code}
+
+                   {selectedCert && certData && (
+                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-in slide-in-from-bottom-2 relative overflow-hidden">
+                       <Award className="absolute -right-4 -bottom-4 text-blue-100 w-24 h-24 rotate-12" />
+                       <div className="relative z-10">
+                         <div className="flex items-center justify-between mb-3">
+                           <div className="flex items-center gap-2 text-blue-800 font-bold text-sm">
+                             <Award size={16} />
+                             <span>Correspondance Référentiel TP</span>
+                           </div>
+                           <MatchBadge percentage={certData.match} />
+                         </div>
+                         
+                         <div className="space-y-2">
+                           <div className="inline-block bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+                             {certData.code}
+                           </div>
+                           <p className="text-sm font-medium text-blue-900 leading-snug">
+                             {certData.label}
+                           </p>
+                           
+                           <div className="pt-2">
+                              <div className="flex justify-between text-[10px] text-blue-600 mb-1 uppercase font-semibold">
+                                <span>Force du lien</span>
+                                <span>{certData.match}%</span>
+                              </div>
+                              <ProgressBar percentage={certData.match} className="bg-blue-200" />
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+
+                   {selectedCert && !certData && (
+                     <div className="bg-slate-100 border border-slate-200 rounded-lg p-4 text-center">
+                       <p className="text-sm text-slate-500 italic">
+                         Cette compétence est hors du périmètre strict du référentiel sélectionné.
+                       </p>
+                     </div>
+                   )}
+
+                   <div className="mt-8 flex justify-end">
+                     <button 
+                      onClick={onClose}
+                      className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors shadow-sm"
+                     >
+                       Fermer
+                     </button>
                    </div>
-                   <p className="text-sm font-medium text-blue-900 leading-snug">
-                     {certData.label}
-                   </p>
-                   
-                   <div className="pt-2">
-                      <div className="flex justify-between text-[10px] text-blue-600 mb-1 uppercase font-semibold">
-                        <span>Force du lien</span>
-                        <span>{certData.match}%</span>
-                      </div>
-                      <ProgressBar percentage={certData.match} className="bg-blue-200" />
-                   </div>
-                 </div>
-               </div>
-             </div>
-           )}
-
-           {selectedCert && !certData && (
-             <div className="bg-slate-100 border border-slate-200 rounded-lg p-4 text-center">
-               <p className="text-sm text-slate-500 italic">
-                 Cette compétence est hors du périmètre strict du référentiel sélectionné.
-               </p>
-             </div>
-           )}
-
-           <div className="mt-8 flex justify-end">
-             <button 
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors shadow-sm"
-             >
-               Fermer
-             </button>
-           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const SkillCategory = ({ category, isExpanded, onToggle, onSelectSubSkill, searchQuery, selectedCert }) => {
-  const certCategoryData = selectedCert && certificationsData[selectedCert].categoryMappings[category.id];
-  
-  // Utilisation de la fonction partagée pour la cohérence
-  const matchesSearch = useMemo(() => checkMatch(category, searchQuery), [category, searchQuery]);
-
-  const filteredSubSkills = useMemo(() => {
-    if (!searchQuery) return category.subSkills;
-    return category.subSkills.filter(sub => 
-      sub.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      category.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [category, searchQuery]);
-
-  if (!matchesSearch) return null;
-
-  const shouldBeExpanded = (searchQuery && matchesSearch) ? true : isExpanded;
-
-  return (
-    <div className={`border rounded-lg bg-white shadow-sm mb-3 overflow-hidden transition-all duration-300 hover:shadow-md
-      ${selectedCert && !certCategoryData ? 'border-slate-100 opacity-70' : 'border-slate-200'}
-    `}>
-      <button 
-        onClick={() => onToggle(category.id)}
-        className={`w-full flex items-center justify-between p-4 text-left transition-colors relative
-          ${shouldBeExpanded ? 'bg-slate-50' : 'bg-white hover:bg-slate-50'}
-        `}
-      >
-        <div className="flex items-center gap-4 relative z-10 max-w-[90%]">
-          <div className={`p-2 rounded-md transition-colors ${shouldBeExpanded ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'}`}>
-            {category.icon}
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className={`font-semibold text-lg ${shouldBeExpanded ? 'text-slate-900' : 'text-slate-700'}`}>
-                {category.title}
-              </h2>
-              {certCategoryData && (
-                <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in">
-                  <Award size={10} />
-                  {certCategoryData.block}
-                  <span className="opacity-75 border-l border-blue-400 pl-1.5 ml-0.5">{certCategoryData.match}%</span>
-                </span>
-              )}
+                </div>
+              </div>
             </div>
-            
-            {!shouldBeExpanded && (
-               <p className="text-sm text-slate-500 line-clamp-1 mt-0.5 hidden sm:block">
-                 {category.description}
-               </p>
-            )}
-          </div>
-        </div>
-        <div className="text-slate-400">
-          {shouldBeExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-        </div>
-      </button>
+          );
+        };
 
-      <div 
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${shouldBeExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}
-      >
-        <div className="p-4 pt-2 border-t border-slate-100 bg-slate-50/50">
-          
-          {certCategoryData && (
-             <div className="mb-4 bg-blue-50/50 border border-blue-100 rounded p-2 flex items-start gap-2">
-               <Award className="text-blue-500 mt-0.5 shrink-0" size={14} />
-               <div>
-                  <span className="text-xs font-bold text-blue-800 block">{certCategoryData.title}</span>
-                  <p className="text-xs text-blue-600/80">Ce domaine est couvert à {certCategoryData.match}% par ce bloc.</p>
-               </div>
-             </div>
-          )}
+        const SkillCategory = ({ category, isExpanded, onToggle, onSelectSubSkill, searchQuery, selectedCert }) => {
+          const certCategoryData = selectedCert && certificationsData[selectedCert].categoryMappings[category.id];
+           
+          // Utilisation de la fonction partagée pour la cohérence
+          const matchesSearch = useMemo(() => checkMatch(category, searchQuery), [category, searchQuery]);
 
-          <p className="text-sm text-slate-600 mb-4 italic px-2">
-            {category.description}
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {filteredSubSkills.map((subSkill) => {
-              const certSkillData = selectedCert ? certificationsData[selectedCert].skillMappings[subSkill.id] : null;
-              const isDimmed = selectedCert && !certSkillData;
+          const filteredSubSkills = useMemo(() => {
+            if (!searchQuery) return category.subSkills;
+            return category.subSkills.filter(sub => 
+              sub.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              sub.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              category.title.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+          }, [category, searchQuery]);
 
-              return (
-                <div 
-                  key={subSkill.id}
-                  onClick={() => onSelectSubSkill(subSkill, certSkillData)}
-                  className={`
-                    group cursor-pointer border rounded-lg p-3 transition-all duration-200 flex flex-col justify-between relative
-                    ${isDimmed 
-                      ? 'bg-slate-50 border-slate-100 opacity-40 hover:opacity-100 grayscale hover:grayscale-0' 
-                      : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
-                    }
-                    ${certSkillData ? 'ring-1 ring-blue-100' : ''}
-                  `}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                        {subSkill.id}
-                      </span>
+          if (!matchesSearch) return null;
+
+          const shouldBeExpanded = (searchQuery && matchesSearch) ? true : isExpanded;
+
+          return (
+            <div className={`border rounded-lg bg-white shadow-sm mb-3 overflow-hidden transition-all duration-300 hover:shadow-md
+              ${selectedCert && !certCategoryData ? 'border-slate-100 opacity-70' : 'border-slate-200'}
+            `}>
+              <button 
+                onClick={() => onToggle(category.id)}
+                className={`w-full flex items-center justify-between p-4 text-left transition-colors relative
+                  ${shouldBeExpanded ? 'bg-slate-50' : 'bg-white hover:bg-slate-50'}
+                `}
+              >
+                <div className="flex items-center gap-4 relative z-10 max-w-[90%]">
+                  <div className={`p-2 rounded-md transition-colors ${shouldBeExpanded ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'}`}>
+                    {category.icon}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className={`font-semibold text-lg ${shouldBeExpanded ? 'text-slate-900' : 'text-slate-700'}`}>
+                        {category.title}
+                      </h2>
+                      {certCategoryData && (
+                        <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in">
+                          <Award size={10} />
+                          {certCategoryData.block}
+                          <span className="opacity-75 border-l border-blue-400 pl-1.5 ml-0.5">{certCategoryData.match}%</span>
+                        </span>
+                      )}
                     </div>
                     
-                    <div className={`${isDimmed ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'} transition-opacity text-slate-400`}>
-                      <Search size={14} />
-                    </div>
+                    {!shouldBeExpanded && (
+                       <p className="text-sm text-slate-500 line-clamp-1 mt-0.5 hidden sm:block">
+                         {category.description}
+                       </p>
+                    )}
                   </div>
-                  
-                  <h3 className={`text-sm font-semibold transition-colors mb-2 ${isDimmed ? 'text-slate-500' : 'text-slate-800 group-hover:text-blue-700'}`}>
-                    {subSkill.title.replace(/^\d+\.\d+\.\s/, '')}
-                  </h3>
+                </div>
+                <div className="text-slate-400">
+                  {shouldBeExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                </div>
+              </button>
 
-                  {certSkillData && (
-                    <div className="mt-auto pt-2 border-t border-slate-100">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 truncate max-w-[70%]">
-                          {certSkillData.code}
-                        </span>
-                        <span className="text-[10px] font-bold text-blue-600">{certSkillData.match}%</span>
+              <div 
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${shouldBeExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="p-4 pt-2 border-t border-slate-100 bg-slate-50/50">
+                  
+                  {certCategoryData && (
+                     <div className="mb-4 bg-blue-50/50 border border-blue-100 rounded p-2 flex items-start gap-2">
+                       <Award className="text-blue-500 mt-0.5 shrink-0" size={14} />
+                       <div>
+                          <span className="text-xs font-bold text-blue-800 block">{certCategoryData.title}</span>
+                          <p className="text-xs text-blue-600/80">Ce domaine est couvert à {certCategoryData.match}% par ce bloc.</p>
+                       </div>
+                     </div>
+                  )}
+
+                  <p className="text-sm text-slate-600 mb-4 italic px-2">
+                    {category.description}
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {filteredSubSkills.map((subSkill) => {
+                      const certSkillData = selectedCert ? certificationsData[selectedCert].skillMappings[subSkill.id] : null;
+                      const isDimmed = selectedCert && !certSkillData;
+
+                      return (
+                        <div 
+                          key={subSkill.id}
+                          onClick={() => onSelectSubSkill(subSkill, certSkillData)}
+                          className={`
+                            group cursor-pointer border rounded-lg p-3 transition-all duration-200 flex flex-col justify-between relative
+                            ${isDimmed 
+                              ? 'bg-slate-50 border-slate-100 opacity-40 hover:opacity-100 grayscale hover:grayscale-0' 
+                              : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
+                            }
+                            ${certSkillData ? 'ring-1 ring-blue-100' : ''}
+                          `}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                                {subSkill.id}
+                              </span>
+                            </div>
+                            
+                            <div className={`${isDimmed ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'} transition-opacity text-slate-400`}>
+                              <Search size={14} />
+                            </div>
+                          </div>
+                          
+                          <h3 className={`text-sm font-semibold transition-colors mb-2 ${isDimmed ? 'text-slate-500' : 'text-slate-800 group-hover:text-blue-700'}`}>
+                            {subSkill.title.replace(/^\d+\.\d+\.\s/, '')}
+                          </h3>
+
+                          {certSkillData && (
+                            <div className="mt-auto pt-2 border-t border-slate-100">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 truncate max-w-[70%]">
+                                  {certSkillData.code}
+                                </span>
+                                <span className="text-[10px] font-bold text-blue-600">{certSkillData.match}%</span>
+                              </div>
+                              <ProgressBar percentage={certSkillData.match} className="h-1 bg-blue-100" />
+                              <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-tight">
+                                {certSkillData.label}
+                              </p>
+                            </div>
+                          )}
+                          
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // --- APP PRINCIPALE ---
+
+        function App() {
+          const [expandedCategories, setExpandedCategories] = useState({});
+          const [selectedSkillData, setSelectedSkillData] = useState(null);
+          const [searchQuery, setSearchQuery] = useState("");
+          const [selectedCert, setSelectedCert] = useState("");
+
+          const toggleCategory = (id) => {
+            setExpandedCategories(prev => ({
+              ...prev,
+              [id]: !prev[id]
+            }));
+          };
+
+          const expandAll = () => {
+            const allIds = skillsData.reduce((acc, cat) => ({...acc, [cat.id]: true}), {});
+            setExpandedCategories(allIds);
+          };
+
+          const collapseAll = () => {
+            setExpandedCategories({});
+          };
+
+          const handleSkillClick = (skill, certData) => {
+            setSelectedSkillData({ skill, certData });
+          };
+
+          return (
+            <div className="min-h-screen bg-slate-100 font-sans text-slate-900 pb-20">
+              <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+                <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-900 rounded-lg shadow-sm">
+                         <Layers className="text-white w-6 h-6" />
                       </div>
-                      <ProgressBar percentage={certSkillData.match} className="h-1 bg-blue-100" />
-                      <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-tight">
-                        {certSkillData.label}
-                      </p>
+                      <div>
+                        <h1 className="text-xl font-bold text-slate-900 leading-none">Arbre de Compétences</h1>
+                        <p className="text-sm text-slate-500 mt-1">Ingénierie en Automatisme & Contrôle-Commande</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-3">
+                      <div className="relative flex-grow">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Search className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                          type="text"
+                          className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-md leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm transition-colors"
+                          placeholder="Rechercher une compétence..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="relative min-w-[240px] md:max-w-xs">
+                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Filter className={`h-4 w-4 ${selectedCert ? 'text-blue-500' : 'text-slate-400'}`} />
+                        </div>
+                        <select 
+                          className={`block w-full pl-10 pr-8 py-2 border rounded-md leading-5 sm:text-sm focus:outline-none focus:ring-1 transition-colors appearance-none cursor-pointer truncate
+                            ${selectedCert 
+                              ? 'bg-blue-50 border-blue-200 text-blue-900 focus:border-blue-500 focus:ring-blue-500 font-medium' 
+                              : 'bg-slate-50 border-slate-200 text-slate-600 focus:border-slate-500 focus:ring-slate-500'
+                            }
+                          `}
+                          value={selectedCert}
+                          onChange={(e) => setSelectedCert(e.target.value)}
+                        >
+                          <option value="">Filtrer par Certification...</option>
+                          {Object.values(certificationsData).map(cert => (
+                            <option key={cert.id} value={cert.id}>{cert.label}</option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                          <ChevronDown size={14} />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </header>
+
+              <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+                  <div className="text-sm text-slate-500">
+                    {selectedCert ? (
+                       <div className="animate-in fade-in slide-in-from-left-2">
+                         <span className="flex items-center gap-2 text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 shadow-sm w-fit">
+                           <Award size={14} />
+                           <span className="font-semibold truncate max-w-[200px] sm:max-w-md">Mode Certification: {selectedCert}</span>
+                         </span>
+                       </div>
+                    ) : (
+                       <span>Explorez les {skillsData.length} domaines d'expertise</span>
+                    )}
+                  </div>
+                  <div className="flex space-x-2 self-end sm:self-auto">
+                    <button 
+                      onClick={expandAll}
+                      className="text-xs font-medium px-3 py-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors shadow-sm"
+                    >
+                      Tout Ouvrir
+                    </button>
+                    <button 
+                      onClick={collapseAll}
+                      className="text-xs font-medium px-3 py-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors shadow-sm"
+                    >
+                      Tout Fermer
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tree List par Phase */}
+                <div className="space-y-4">
+                  {phases.map((phase) => {
+                    // Filtrer les catégories qui appartiennent à cette phase
+                    const phaseCategories = skillsData.filter(cat => phase.ids.includes(cat.id));
+                    
+                    // Vérifier s'il reste des catégories visibles après recherche
+                    const visibleCategories = phaseCategories.filter(cat => checkMatch(cat, searchQuery));
+
+                    // Ne rien afficher si aucune catégorie de cette phase ne correspond à la recherche
+                    if (visibleCategories.length === 0) return null;
+
+                    return (
+                      <div key={phase.title} className="mb-6">
+                        {/* Séparateur de Phase */}
+                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6 pl-1 border-l-4 border-slate-300 first:mt-0">
+                          {phase.title}
+                        </h3>
+                        
+                        <div className="space-y-3">
+                          {visibleCategories.map(category => (
+                            <SkillCategory 
+                              key={category.id} 
+                              category={category} 
+                              isExpanded={!!expandedCategories[category.id]}
+                              onToggle={toggleCategory}
+                              onSelectSubSkill={handleSkillClick}
+                              searchQuery={searchQuery}
+                              selectedCert={selectedCert}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Empty State */}
+                  {searchQuery && skillsData.every(cat => !checkMatch(cat, searchQuery)) && (
+                    <div className="text-center py-12">
+                       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-4">
+                         <Search className="text-slate-400" />
+                       </div>
+                       <h3 className="text-lg font-medium text-slate-900">Aucun résultat trouvé</h3>
+                       <p className="text-slate-500 mt-1">Essayez un autre terme de recherche.</p>
                     </div>
                   )}
-                  
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+              </main>
 
-// --- APP PRINCIPALE ---
-
-export default function App() {
-  const [expandedCategories, setExpandedCategories] = useState({});
-  const [selectedSkillData, setSelectedSkillData] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCert, setSelectedCert] = useState("");
-
-  const toggleCategory = (id) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  const expandAll = () => {
-    const allIds = skillsData.reduce((acc, cat) => ({...acc, [cat.id]: true}), {});
-    setExpandedCategories(allIds);
-  };
-
-  const collapseAll = () => {
-    setExpandedCategories({});
-  };
-
-  const handleSkillClick = (skill, certData) => {
-    setSelectedSkillData({ skill, certData });
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-100 font-sans text-slate-900 pb-20">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-900 rounded-lg shadow-sm">
-                 <Layers className="text-white w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 leading-none">Arbre de Compétences</h1>
-                <p className="text-sm text-slate-500 mt-1">Ingénierie en Automatisme & Contrôle-Commande</p>
-              </div>
+              <Modal 
+                isOpen={!!selectedSkillData} 
+                skill={selectedSkillData?.skill}
+                certData={selectedSkillData?.certData}
+                selectedCert={selectedCert}
+                onClose={() => setSelectedSkillData(null)} 
+              />
             </div>
+          );
+        }
 
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="relative flex-grow">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-slate-400" />
-                </div>
-                <input
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-md leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm transition-colors"
-                  placeholder="Rechercher une compétence..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              
-              <div className="relative min-w-[240px] md:max-w-xs">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Filter className={`h-4 w-4 ${selectedCert ? 'text-blue-500' : 'text-slate-400'}`} />
-                </div>
-                <select 
-                  className={`block w-full pl-10 pr-8 py-2 border rounded-md leading-5 sm:text-sm focus:outline-none focus:ring-1 transition-colors appearance-none cursor-pointer truncate
-                    ${selectedCert 
-                      ? 'bg-blue-50 border-blue-200 text-blue-900 focus:border-blue-500 focus:ring-blue-500 font-medium' 
-                      : 'bg-slate-50 border-slate-200 text-slate-600 focus:border-slate-500 focus:ring-slate-500'
-                    }
-                  `}
-                  value={selectedCert}
-                  onChange={(e) => setSelectedCert(e.target.value)}
-                >
-                  <option value="">Filtrer par Certification...</option>
-                  {Object.values(certificationsData).map(cert => (
-                    <option key={cert.id} value={cert.id}>{cert.label}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-                  <ChevronDown size={14} />
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-          <div className="text-sm text-slate-500">
-            {selectedCert ? (
-               <div className="animate-in fade-in slide-in-from-left-2">
-                 <span className="flex items-center gap-2 text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 shadow-sm w-fit">
-                   <Award size={14} />
-                   <span className="font-semibold truncate max-w-[200px] sm:max-w-md">Mode Certification: {selectedCert}</span>
-                 </span>
-               </div>
-            ) : (
-               <span>Explorez les {skillsData.length} domaines d'expertise</span>
-            )}
-          </div>
-          <div className="flex space-x-2 self-end sm:self-auto">
-            <button 
-              onClick={expandAll}
-              className="text-xs font-medium px-3 py-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors shadow-sm"
-            >
-              Tout Ouvrir
-            </button>
-            <button 
-              onClick={collapseAll}
-              className="text-xs font-medium px-3 py-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors shadow-sm"
-            >
-              Tout Fermer
-            </button>
-          </div>
-        </div>
-
-        {/* Tree List par Phase */}
-        <div className="space-y-4">
-          {phases.map((phase) => {
-            // Filtrer les catégories qui appartiennent à cette phase
-            const phaseCategories = skillsData.filter(cat => phase.ids.includes(cat.id));
-            
-            // Vérifier s'il reste des catégories visibles après recherche
-            const visibleCategories = phaseCategories.filter(cat => checkMatch(cat, searchQuery));
-
-            // Ne rien afficher si aucune catégorie de cette phase ne correspond à la recherche
-            if (visibleCategories.length === 0) return null;
-
-            return (
-              <div key={phase.title} className="mb-6">
-                {/* Séparateur de Phase */}
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6 pl-1 border-l-4 border-slate-300 first:mt-0">
-                  {phase.title}
-                </h3>
-                
-                <div className="space-y-3">
-                  {visibleCategories.map(category => (
-                    <SkillCategory 
-                      key={category.id} 
-                      category={category} 
-                      isExpanded={!!expandedCategories[category.id]}
-                      onToggle={toggleCategory}
-                      onSelectSubSkill={handleSkillClick}
-                      searchQuery={searchQuery}
-                      selectedCert={selectedCert}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-          
-          {/* Empty State */}
-          {searchQuery && skillsData.every(cat => !checkMatch(cat, searchQuery)) && (
-            <div className="text-center py-12">
-               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-4">
-                 <Search className="text-slate-400" />
-               </div>
-               <h3 className="text-lg font-medium text-slate-900">Aucun résultat trouvé</h3>
-               <p className="text-slate-500 mt-1">Essayez un autre terme de recherche.</p>
-            </div>
-          )}
-        </div>
-      </main>
-
-      <Modal 
-        isOpen={!!selectedSkillData} 
-        skill={selectedSkillData?.skill}
-        certData={selectedSkillData?.certData}
-        selectedCert={selectedCert}
-        onClose={() => setSelectedSkillData(null)} 
-      />
-    </div>
-  );
-}
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
