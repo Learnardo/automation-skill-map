@@ -8,18 +8,17 @@
     <!-- 1. Chargement de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- 2. Chargement de React et ReactDOM -->
+    <!-- 2. Chargement de React et ReactDOM (Version Production) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
-    <!-- 3. Chargement de Babel pour interpréter le JSX -->
+    <!-- 3. Chargement de Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 4. Chargement de Lucide React (Icônes) -->
-    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.min.js"></script>
+    <!-- 4. Chargement de Lucide React (Version Fixe Stable) -->
+    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js" crossorigin></script>
 
     <style>
-        /* Masquer la barre de défilement pour les éléments avec la classe .hide-scrollbar */
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -34,12 +33,20 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- ADAPTATION DES IMPORTS POUR LE NAVIGATEUR ---
+        // --- 1. RECUPERATION DES LIBRAIRIES ---
         
-        // Récupération des Hooks React depuis l'objet global
         const { useState, useMemo, useRef, useEffect } = React;
 
-        // Récupération des icônes Lucide depuis l'objet global LucideReact
+        // Sécurisation de l'import Lucide (parfois nommé lucideReact ou LucideReact selon les versions)
+        const LucideIcons = window.LucideReact || window.lucideReact;
+
+        // Si la librairie ne charge pas, on évite le crash blanc
+        if (!LucideIcons) {
+            console.error("Erreur critique : La librairie d'icônes Lucide ne s'est pas chargée correctement.");
+            document.getElementById('root').innerHTML = '<div class="p-10 text-red-600 font-bold">Erreur de chargement des icônes. Vérifiez votre connexion internet.</div>';
+            throw new Error("Lucide library not found");
+        }
+
         const { 
             ChevronDown, 
             ChevronRight, 
@@ -71,11 +78,10 @@
             ShieldCheck,
             Target,
             Signal
-        } = LucideReact;
+        } = LucideIcons;
 
-        // --- DÉBUT DU CODE ORIGINAL (Refactorisé sans modifier le contenu) ---
+        // --- 2. DONNEES ---
 
-        // --- DONNÉES DE L'ARBRE DE COMPÉTENCES ---
         const skillsData = [
           {
             id: "1",
@@ -201,7 +207,6 @@
           }
         ];
 
-        // --- NOUVELLE DEFINITION DES NIVEAUX (AVEC HEURES) ---
         const LEVEL_DETAILS = [
           { label: "Pas d'expérience", hours: "0h", desc: "Jamais pratiqué" },
           { label: "Initié", hours: "< 100h", desc: "Premiers acquis" },
@@ -209,13 +214,11 @@
           { label: "Avancé", hours: "> 1000h", desc: "Maîtrise complète" }
         ];
 
-        // NOUVEAU : CONSTANTE DES MOIS
         const MONTHS = [
           "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
           "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
         ];
 
-        // OPTIONS DE RYTHME
         const PACE_OPTIONS = [
           { label: "Flexible", sub: "3h / sem", value: 3 },
           { label: "Dynamique", sub: "7h / sem", value: 7 },
@@ -224,7 +227,6 @@
           { label: "Immersif", sub: "35h / sem", value: 35 }
         ];
 
-        // OPTIONS DE FORMAT
         const FORMAT_OPTIONS = [
           { label: "Express", sub: "< 14h", value: "express" },
           { label: "Court", sub: "14h à 35h", value: "short" },
@@ -235,17 +237,13 @@
         const MANUFACTURER_OPTIONS = ["Schneider Electric", "Siemens", "Rockwell Automation", "Omron", "Autre"];
         const SECTOR_OPTIONS = ["Pharmaceutique", "Infrastructure", "Défense", "Agroalimentaire", "Energie", "Autre"];
 
-        // --- DEFINITION DES PACKAGES (PRESETS) ---
         const PRESETS = [
-          // --- NIVEAU 1 : INITIATION ---
           {
             id: 'socle_fondamental',
             label: 'Socle fondamental',
             description: "Idéal pour découvrir le panorama des systèmes, lire un GRAFCET et comprendre les bases du Ladder.",
             skills: ['1.1', '2.1', '3.1']
           },
-
-          // --- NIVEAU 2 : MODULES EXPERTS (Courts 2-4j) ---
           {
             id: 'focus_qualif',
             label: 'Qualité',
@@ -264,8 +262,6 @@
             description: "Idéal pour identifier l'origine d'une panne (capteur, câble ou automate) sans modifier le programme.",
             skills: ['2.1', '6.2', '7.1']
           },
-
-          // --- NIVEAU 3 : PARCOURS MÉTIERS (Longs 10j+) ---
           {
             id: 'maintenance_expert',
             label: 'Expertise Système',
@@ -286,7 +282,8 @@
           }
         ];
 
-        // --- UTILS ---
+        // --- 3. COMPOSANTS ET LOGIQUE ---
+
         const checkMatch = (category, searchQuery) => {
           if (!searchQuery) return true;
           const lowerQuery = searchQuery.toLowerCase();
@@ -297,8 +294,6 @@
           );
           return catMatch || subMatch;
         };
-
-        // --- COMPOSANTS INTERNES ---
 
         const SkillItemSelectable = ({ subSkill, isSelected, onToggle }) => (
           <div 
@@ -449,11 +444,8 @@
           );
         };
 
-        // --- MAIN APP ---
-
         function App() {
           const [activeTab, setActiveTab] = useState(0); 
-           
           const [selectedSkills, setSelectedSkills] = useState([]);
           const [skillLevels, setSkillLevels] = useState({}); 
            
@@ -470,8 +462,6 @@
 
           const [searchQuery, setSearchQuery] = useState("");
           const [expandedCategories, setExpandedCategories] = useState({});
-
-          // --- HELPERS ---
 
           const toggleCategoryExpand = (id) => {
             setExpandedCategories(prev => ({ ...prev, [id]: !prev[id] }));
@@ -592,8 +582,6 @@
             return `${minWeeks} à ${maxWeeks} semaines`;
           };
 
-          // --- TABS RENDERING ---
-
           const tabs = [
             { id: 0, title: "1. Sélection", icon: <ClipboardList size={18} /> },
             { id: 1, title: "2. Priorisation", icon: <ListOrdered size={18} /> },
@@ -603,7 +591,7 @@
 
           const renderTabContent = () => {
             switch (activeTab) {
-              case 0: // SELECTION
+              case 0:
                 const activePreset = PRESETS.find(preset => 
                   selectedSkills.length === preset.skills.length && 
                   preset.skills.every(id => selectedSkills.includes(id))
@@ -612,7 +600,6 @@
                 return (
                   <div className="animate-in fade-in duration-300">
                     <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm mb-6 sticky top-4 z-20 flex flex-col gap-4">
-                       
                       <div className="flex flex-col md:flex-row gap-3 items-center w-full">
                         <div className="relative flex-grow w-full">
                           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -643,7 +630,6 @@
                       <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar border-t border-slate-100 pt-3 w-full">
                           {PRESETS.map(preset => {
                             const isPresetActive = selectedSkills.length === preset.skills.length && preset.skills.every(id => selectedSkills.includes(id));
-                            
                             return (
                               <button
                                 key={preset.id}
@@ -660,15 +646,12 @@
                             );
                           })}
                       </div>
-
                       {activePreset && (
                         <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 animate-in fade-in slide-in-from-top-1">
                           <p className="text-sm text-slate-600 leading-relaxed">{activePreset.description}</p>
                         </div>
                       )}
-
                     </div>
-
                     <div className="space-y-4">
                       {skillsData.map(category => (
                         <CategoryGroup 
@@ -685,7 +668,7 @@
                   </div>
                 );
 
-              case 1: // PRIORISATION
+              case 1:
                 if (selectedSkills.length === 0) return (
                     <div className="text-center py-20 bg-white rounded-lg border border-slate-200 border-dashed">
                         <p className="text-slate-500">Aucune compétence sélectionnée.</p>
@@ -694,7 +677,6 @@
                 );
                 return (
                   <div className="animate-in slide-in-from-right-4 duration-300">
-                     
                     <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm mb-6">
                       <div className="space-y-5">
                         <div>
@@ -719,7 +701,6 @@
                             ))}
                           </div>
                         </div>
-
                         <div>
                           <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                             <ShieldCheck size={14} />
@@ -780,9 +761,7 @@
                             >
                               <ArrowDown size={18} />
                             </button>
-                             
                             <div className="w-px h-4 bg-slate-200 mx-1"></div>
-
                             <button 
                               onClick={() => handleSelection([skill.id], false)}
                               className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
@@ -797,44 +776,37 @@
                   </div>
                 );
 
-              case 2: // POSITIONNEMENT
+              case 2: 
                 if (selectedSkills.length === 0) return <div className="text-center py-20"><p className="text-slate-500">Aucune compétence sélectionnée.</p></div>;
                 return (
                   <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
-                     
                     {resolvedSelectedSkills.map((skill) => {
                       const currentLevel = skillLevels[skill.id] !== undefined ? skillLevels[skill.id] : 0;
-
                       return (
                         <div key={skill.id} className="bg-white p-5 border border-slate-200 rounded-lg shadow-sm">
                           <div className="mb-4">
                               <h4 className="font-bold text-slate-800 text-lg">{skill.title}</h4>
                               <p className="text-sm text-slate-500">{skill.description}</p>
                           </div>
-                           
                           <div className="mt-4">
                               <PositionSelector 
                                  value={currentLevel}
                                  onChange={(val) => updateLevel(skill.id, val)}
                               />
                           </div>
-
                         </div>
                       );
                     })}
                   </div>
                 );
 
-              case 3: // PLAN
+              case 3:
                 const durationEstimate = calculateDuration();
-
                 return (
                   <div className="animate-in slide-in-from-right-4 duration-300 max-w-2xl mx-auto">
                     <div className="bg-white p-8 border border-slate-200 rounded-xl shadow-lg">
                       <h2 className="text-2xl font-bold text-slate-900 mb-6">Planification</h2>
-                       
                       <div className="space-y-8">
-                        
                         <div>
                            <label className="block text-sm font-medium text-slate-700 mb-3">Période de disponibilité souhaitée</label>
                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
@@ -858,10 +830,8 @@
                            </div>
                            <p className="mt-2 text-xs text-slate-400">Sélectionnez un ou plusieurs mois pour définir votre fenêtre de disponibilité.</p>
                         </div>
-
                         <div>
                            <label className="block text-sm font-medium text-slate-700 mb-3">Rythme Hebdomadaire</label>
-                           
                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                              {PACE_OPTIONS.map((option) => {
                                const isSelected = logistics.weeklyHours === option.value;
@@ -883,10 +853,8 @@
                              })}
                            </div>
                         </div>
-
                         <div>
                            <label className="block text-sm font-medium text-slate-700 mb-3">Format envisageable</label>
-                           
                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                              {FORMAT_OPTIONS.map((option) => {
                                const isSelected = logistics.format === option.value;
@@ -908,7 +876,6 @@
                              })}
                            </div>
                         </div>
-
                         <div className="pt-6 border-t border-slate-100">
                           <h3 className="font-semibold text-slate-900 mb-3">Récapitulatif Préliminaire</h3>
                           <ul className="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-lg">
@@ -941,15 +908,12 @@
                     </div>
                   </div>
                 );
-
               default: return null;
             }
           };
 
           return (
             <div className="min-h-screen bg-slate-100 font-sans text-slate-900 pb-20">
-               
-              {/* HEADER STEPPER */}
               <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
                 <div className="max-w-5xl mx-auto">
                   <div className="flex flex-col md:flex-row items-center justify-between px-4 py-4 md:py-0 md:h-20 gap-4">
@@ -962,12 +926,10 @@
                            <h1 className="text-xl font-bold leading-none text-slate-900">Automatique</h1>
                         </div>
                      </div>
-
                      <nav className="flex items-center gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
                         {tabs.map((tab, idx) => {
                           const isActive = activeTab === idx;
                           const isCompleted = activeTab > idx;
-                           
                           return (
                             <button
                               key={tab.id}
@@ -996,16 +958,13 @@
                   </div>
                 </div>
               </header>
-
               <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
                 {renderTabContent()}
               </main>
-
             </div>
           );
         }
 
-        // --- RENDER DE L'APPLICATION ---
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
 
