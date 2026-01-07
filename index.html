@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Application Automatisme - Évaluation des Compétences</title>
 
-    <!-- 1. Tailwind CSS (Design) -->
+    <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- 2. Lucide Icons (Icônes) -->
+    <!-- 2. Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* Utilitaires personnalisés */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Animations simples CSS */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
@@ -26,8 +24,10 @@
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen pb-20">
 
-    <!-- Conteneur principal de l'application -->
-    <div id="app"></div>
+    <div id="app">
+        <header id="app-header" class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm"></header>
+        <main id="app-content" class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8"></main>
+    </div>
 
     <script>
         // --- 1. DONNÉES & CONFIGURATION ---
@@ -232,15 +232,37 @@
         // --- 2. ÉTAT GLOBAL (STATE) ---
         const state = {
             activeTab: 0,
-            selectedSkills: [], // Array of strings (ids)
-            skillLevels: {}, // Object { skillId: levelIndex }
+            selectedSkills: [], 
+            skillLevels: {}, 
             preferences: { manufacturers: [], sectors: [] },
             logistics: { selectedMonths: [], weeklyHours: 0, format: '' },
             searchQuery: "",
-            expandedCategories: {} // Object { catId: boolean }
+            expandedCategories: {} 
         };
 
-        // --- 3. LOGIQUE MÉTIER ---
+        // --- 3. HELPER ICONES (OPTIMISATION) ---
+        // Génère le SVG directement pour éviter le saut visuel au chargement
+        function getIcon(name, size = 20, className = '') {
+            if (!window.lucide) return '';
+            
+            // Conversion kebab-case (ex: book-open) vers PascalCase (ex: BookOpen)
+            const pascalName = name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+            
+            const iconNode = lucide.icons[pascalName];
+            if (!iconNode) {
+                console.warn(`Icon not found: ${name} -> ${pascalName}`);
+                return '';
+            }
+
+            // Génération SVG
+            return iconNode.toSvg({
+                width: size,
+                height: size,
+                class: className
+            });
+        }
+
+        // --- 4. LOGIQUE MÉTIER ---
 
         function calculateDuration() {
             if (!state.logistics.weeklyHours || !state.logistics.format) return null;
@@ -272,18 +294,55 @@
             }).filter(Boolean);
         }
 
-        // --- 4. RENDU (RENDER FUNCTIONS) ---
+        // --- 5. MOTEUR DE RENDU ---
+
+        function updateContainer(containerId, htmlContent) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // 1. Sauvegarde Focus & Scroll
+            const activeEl = document.activeElement;
+            const activeId = activeEl ? activeEl.id : null;
+            const selectionStart = activeEl && activeEl.value ? activeEl.selectionStart : null;
+            const selectionEnd = activeEl && activeEl.value ? activeEl.selectionEnd : null;
+
+            // Sauvegarde des positions de scroll des conteneurs internes
+            const scrollMap = new Map();
+            container.querySelectorAll('*').forEach((el, idx) => {
+                if (el.scrollTop > 0 || el.scrollLeft > 0) {
+                    // On utilise une clé simple basée sur le contenu ou l'ordre
+                    // Ici on essaye de mapper par ID s'il existe, sinon c'est approximatif
+                    if(el.id) scrollMap.set(el.id, { top: el.scrollTop, left: el.scrollLeft });
+                }
+            });
+
+            // 2. Mise à jour HTML
+            container.innerHTML = htmlContent;
+
+            // 3. Restauration Focus
+            if (activeId) {
+                const newActiveEl = document.getElementById(activeId);
+                if (newActiveEl) {
+                    newActiveEl.focus();
+                    if (selectionStart !== null && selectionEnd !== null && /text|search|password|tel|url/.test(newActiveEl.type)) {
+                        newActiveEl.setSelectionRange(selectionStart, selectionEnd);
+                    }
+                }
+            }
+
+            // 4. Restauration Scroll (si IDs présents)
+            scrollMap.forEach((pos, id) => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.scrollTop = pos.top;
+                    el.scrollLeft = pos.left;
+                }
+            });
+        }
 
         function renderApp() {
-            const app = document.getElementById('app');
-            app.innerHTML = `
-                ${renderHeader()}
-                <main class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                    ${renderContent()}
-                </main>
-            `;
-            // Après chaque rendu, on demande à Lucide de scanner le DOM pour remplacer les balises <i> par des SVG
-            lucide.createIcons();
+            renderHeader();
+            renderContent();
         }
 
         function renderHeader() {
@@ -294,13 +353,12 @@
                 { id: 3, title: "4. Plan", icon: "calendar" }
             ];
 
-            return `
-            <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+            const html = `
                 <div class="max-w-5xl mx-auto">
                     <div class="flex flex-col md:flex-row items-center justify-between px-4 py-4 md:py-0 md:h-20 gap-4">
                         <div class="flex items-center gap-3 shrink-0 self-start md:self-auto pt-2 md:pt-0">
                             <div class="p-2 bg-slate-800 rounded-lg shadow-sm text-white">
-                                <i data-lucide="message-circle" width="24" height="24"></i>
+                                ${getIcon('message-circle', 24)}
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-0.5">Entretien de découverte</p>
@@ -308,7 +366,7 @@
                             </div>
                         </div>
 
-                        <nav class="flex items-center gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+                        <nav id="nav-tabs" class="flex items-center gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
                             ${tabs.map((tab, idx) => {
                                 const isActive = state.activeTab === idx;
                                 const isCompleted = state.activeTab > idx;
@@ -323,7 +381,7 @@
                                     onclick="actions.setActiveTab(${tab.id})"
                                     class="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${buttonClass}"
                                 >
-                                    <i data-lucide="${tab.icon}" width="18" height="18"></i>
+                                    ${getIcon(tab.icon, 18)}
                                     <span class="${isActive ? 'inline' : 'hidden md:inline'}">${tab.title}</span>
                                     ${idx === 0 && state.selectedSkills.length > 0 ? `
                                         <span class="ml-1 text-[10px] px-1.5 rounded-full ${isActive ? 'bg-white text-slate-800' : 'bg-slate-300 text-slate-800'}">
@@ -336,21 +394,25 @@
                         </nav>
                     </div>
                 </div>
-            </header>
             `;
+            
+            updateContainer('app-header', html);
         }
 
         function renderContent() {
+            let html = '';
             switch (state.activeTab) {
-                case 0: return renderSelection();
-                case 1: return renderPrioritization();
-                case 2: return renderPositioning();
-                case 3: return renderPlan();
-                default: return '';
+                case 0: html = generateSelectionHTML(); break;
+                case 1: html = generatePrioritizationHTML(); break;
+                case 2: html = generatePositioningHTML(); break;
+                case 3: html = generatePlanHTML(); break;
             }
+            updateContainer('app-content', html);
         }
 
-        function renderSelection() {
+        // --- GENERATEURS HTML ---
+
+        function generateSelectionHTML() {
             const activePreset = PRESETS.find(preset => 
                 state.selectedSkills.length === preset.skills.length && 
                 preset.skills.every(id => state.selectedSkills.includes(id))
@@ -361,8 +423,11 @@
                 <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm mb-6 sticky top-4 z-20 flex flex-col gap-4">
                     <div class="flex flex-col md:flex-row gap-3 items-center w-full">
                         <div class="relative flex-grow w-full">
-                            <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-slate-400"></i>
+                            <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">
+                                ${getIcon('search', 16)}
+                            </span>
                             <input
+                                id="search-input"
                                 type="text"
                                 oninput="actions.setSearchQuery(this.value)"
                                 value="${state.searchQuery}"
@@ -376,7 +441,7 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar border-t border-slate-100 pt-3 w-full">
+                    <div id="presets-list" class="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar border-t border-slate-100 pt-3 w-full">
                         ${PRESETS.map(preset => {
                             const isPresetActive = state.selectedSkills.length === preset.skills.length && preset.skills.every(id => state.selectedSkills.includes(id));
                             const btnClass = isPresetActive 
@@ -402,14 +467,13 @@
                 </div>
 
                 <div class="space-y-4">
-                    ${SKILLS_DATA.map(renderCategory).join('')}
+                    ${SKILLS_DATA.map(generateCategoryHTML).join('')}
                 </div>
             </div>
             `;
         }
 
-        function renderCategory(category) {
-            // Logique de filtrage
+        function generateCategoryHTML(category) {
             const lowerQuery = state.searchQuery.toLowerCase();
             const subMatch = category.subSkills.filter(sub => 
                 sub.title.toLowerCase().includes(lowerQuery) || 
@@ -417,16 +481,13 @@
                 category.title.toLowerCase().includes(lowerQuery)
             );
             
-            if (state.searchQuery && subMatch.length === 0) return ''; // Rien à afficher si recherche et pas de match
+            if (state.searchQuery && subMatch.length === 0) return ''; 
 
             const filteredSubSkills = state.searchQuery ? subMatch : category.subSkills;
             
             const allVisibleSelected = filteredSubSkills.length > 0 && filteredSubSkills.every(s => state.selectedSkills.includes(s.id));
-            const someVisibleSelected = filteredSubSkills.some(s => state.selectedSkills.includes(s.id));
-            
             const isExpanded = state.searchQuery ? true : !!state.expandedCategories[category.id];
 
-            // Rendu
             return `
             <div class="border rounded-lg bg-white shadow-sm mb-3 overflow-hidden border-slate-200">
                 <div 
@@ -438,7 +499,7 @@
                             <input type="checkbox" ${allVisibleSelected ? 'checked' : ''} class="w-5 h-5 cursor-pointer accent-slate-800" />
                         </div>
                         <div class="p-2 rounded-md ${isExpanded ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'}">
-                            <i data-lucide="${category.icon}" width="20" height="20"></i>
+                            ${getIcon(category.icon, 20)}
                         </div>
                         <div>
                             <h2 class="font-semibold text-lg ${isExpanded ? 'text-slate-900' : 'text-slate-700'}">${category.title}</h2>
@@ -446,7 +507,7 @@
                         </div>
                     </div>
                     <div class="text-slate-400">
-                        <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" width="20" height="20"></i>
+                        ${getIcon(isExpanded ? 'chevron-down' : 'chevron-right', 20)}
                     </div>
                 </div>
 
@@ -481,7 +542,7 @@
             `;
         }
 
-        function renderPrioritization() {
+        function generatePrioritizationHTML() {
             if (state.selectedSkills.length === 0) return `
                 <div class="text-center py-20 bg-white rounded-lg border border-slate-200 border-dashed slide-in">
                     <p class="text-slate-500">Aucune compétence sélectionnée.</p>
@@ -497,7 +558,7 @@
                     <div class="space-y-5">
                         <div>
                             <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
-                                <i data-lucide="factory" width="14" height="14"></i> Écosystèmes Constructeurs
+                                ${getIcon('factory', 14)} Écosystèmes Constructeurs
                             </label>
                             <div class="flex flex-wrap gap-2">
                                 ${MANUFACTURER_OPTIONS.map(opt => `
@@ -510,7 +571,7 @@
                         </div>
                         <div>
                             <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
-                                <i data-lucide="shield-check" width="14" height="14"></i> Secteurs Cibles
+                                ${getIcon('shield-check', 14)} Secteurs Cibles
                             </label>
                             <div class="flex flex-wrap gap-2">
                                 ${SECTOR_OPTIONS.map(opt => `
@@ -537,16 +598,16 @@
                             <div class="min-w-0">
                                 <h4 class="font-semibold text-slate-800 truncate">${skill.title}</h4>
                                 <div class="flex items-center gap-1.5 text-xs text-slate-500">
-                                    <i data-lucide="${skill.categoryIcon}" width="14" height="14" class="text-slate-400"></i>
+                                    <span class="text-slate-400 inline-block align-middle">${getIcon(skill.categoryIcon, 14)}</span>
                                     <span class="truncate">${skill.categoryTitle.replace(/^\d+\.\s*/, '')}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <button onclick="actions.moveSkill(${index}, -1)" ${index === 0 ? 'disabled' : ''} class="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed"><i data-lucide="arrow-up" width="18" height="18"></i></button>
-                            <button onclick="actions.moveSkill(${index}, 1)" ${index === skills.length - 1 ? 'disabled' : ''} class="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed"><i data-lucide="arrow-down" width="18" height="18"></i></button>
+                            <button onclick="actions.moveSkill(${index}, -1)" ${index === 0 ? 'disabled' : ''} class="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed">${getIcon('arrow-up', 18)}</button>
+                            <button onclick="actions.moveSkill(${index}, 1)" ${index === skills.length - 1 ? 'disabled' : ''} class="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed">${getIcon('arrow-down', 18)}</button>
                             <div class="w-px h-4 bg-slate-200 mx-1"></div>
-                            <button onclick="actions.toggleSkill('${skill.id}')" class="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"><i data-lucide="trash-2" width="18" height="18"></i></button>
+                            <button onclick="actions.toggleSkill('${skill.id}')" class="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors">${getIcon('trash-2', 18)}</button>
                         </div>
                     </div>
                     `).join('')}
@@ -555,7 +616,7 @@
             `;
         }
 
-        function renderPositioning() {
+        function generatePositioningHTML() {
             if (state.selectedSkills.length === 0) return '<div class="text-center py-20"><p class="text-slate-500">Aucune compétence sélectionnée.</p></div>';
             
             const skills = getResolvedSelectedSkills();
@@ -592,7 +653,7 @@
             `;
         }
 
-        function renderPlan() {
+        function generatePlanHTML() {
             const durationEstimate = calculateDuration();
 
             return `
@@ -686,8 +747,7 @@
         }
 
 
-        // --- 5. ACTIONS (EVENT HANDLERS) ---
-        // On expose ces fonctions globalement pour qu'elles soient accessibles via onclick=""
+        // --- 6. ACTIONS (EVENT HANDLERS) ---
 
         const actions = {
             setActiveTab: (tabId) => {
@@ -731,7 +791,6 @@
             },
             applyPreset: (presetId) => {
                 const preset = PRESETS.find(p => p.id === presetId);
-                // Si déjà actif, on désactive
                 const isActive = state.selectedSkills.length === preset.skills.length && preset.skills.every(id => state.selectedSkills.includes(id));
                 state.selectedSkills = isActive ? [] : [...preset.skills];
                 renderApp();
@@ -770,8 +829,13 @@
             }
         };
 
-        // Rendu initial
-        renderApp();
+        // Rendu initial (Démarrage)
+        // Attendre que Lucide soit chargé si possible, sinon rendre quand même
+        if (window.lucide) {
+            renderApp();
+        } else {
+            window.onload = renderApp;
+        }
 
     </script>
 </body>
