@@ -504,6 +504,9 @@
             const allVisibleSelected = filteredSubSkills.length > 0 && filteredSubSkills.every(s => state.selectedSkills.includes(s.id));
             const isExpanded = state.searchQuery ? true : !!state.expandedCategories[category.id];
 
+            // CALCUL DU NOMBRE DE COMPÉTENCES SÉLECTIONNÉES
+            const selectedCount = category.subSkills.filter(sub => state.selectedSkills.includes(sub.id)).length;
+
             return `
             <div class="border rounded-lg bg-white shadow-sm mb-3 overflow-hidden border-slate-200">
                 <div 
@@ -518,7 +521,14 @@
                             ${getIconHtml(category.icon, 'icon-md')}
                         </div>
                         <div>
-                            <h2 class="font-semibold text-lg ${isExpanded ? 'text-slate-900' : 'text-slate-700'}">${category.title}</h2>
+                            <h2 class="font-semibold text-lg ${isExpanded ? 'text-slate-900' : 'text-slate-700'} flex items-center">
+                                ${category.title}
+                                ${selectedCount > 0 ? `
+                                    <span class="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold leading-none">
+                                        ${selectedCount}
+                                    </span>
+                                ` : ''}
+                            </h2>
                             ${!isExpanded ? `<p class="text-sm text-slate-500 hidden sm:block">${category.description}</p>` : ''}
                         </div>
                     </div>
@@ -761,6 +771,7 @@
             </div>
             `;
         }
+
 
         // --- 6. ACTIONS (EVENT HANDLERS) ---
         // Toutes les actions redéclenchent le rendu, mais le diffing ne changera que le nécessaire
