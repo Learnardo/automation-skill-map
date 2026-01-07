@@ -8,18 +8,32 @@
     <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- 2. Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 2. Google Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
     <style>
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* Animations */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .slide-in { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Configuration Material Symbols */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+            line-height: 1;
+            user-select: none;
+        }
+        
+        .icon-sm { font-size: 18px !important; }
+        .icon-md { font-size: 20px !important; }
+        .icon-lg { font-size: 24px !important; }
+        .icon-xs { font-size: 16px !important; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen pb-20">
@@ -30,6 +44,9 @@
     </div>
 
     <script>
+        // --- VARIABLE DE CONTROLE D'ANIMATION (CORRECTIF GLITCH) ---
+        let shouldAnimate = true; // Actif seulement au chargement ou changement d'onglet
+
         // --- 1. DONNÉES & CONFIGURATION ---
 
         const SKILLS_DATA = [
@@ -37,7 +54,7 @@
             id: "1",
             title: "1. Spécification des Systèmes",
             description: "Comprendre le besoin, modéliser le procédé et définir les exigences fonctionnelles.",
-            icon: "book-open",
+            icon: "menu_book",
             subSkills: [
               { id: "1.1", title: "Analyse Fonctionnelle et Modélisation", description: "Compréhension du besoin client, GRAFCET, SysML, SADT." },
               { id: "1.2", title: "Sûreté de Fonctionnement", description: "Analyse des risques (APR, HAZOP), SIL/PL." },
@@ -48,7 +65,7 @@
             id: "2",
             title: "2. Conception Technique",
             description: "Définir la structure matérielle, logicielle et réseau.",
-            icon: "cpu",
+            icon: "memory",
             subSkills: [
               { id: "2.1", title: "Architecture Système (API/DCS)", description: "Architecture centralisée/distribuée, choix matériel." },
               { id: "2.2", title: "Réseaux Industriels (OT)", description: "Bus de terrain, Ethernet industriel, Protocoles." },
@@ -61,7 +78,7 @@
             id: "3",
             title: "3. Développement Logiciel",
             description: "Coder et paramétrer les applications de contrôle.",
-            icon: "code-2",
+            icon: "code",
             subSkills: [
               { id: "3.1", title: "Programmation Automates", description: "IEC 61131-3 (Ladder, ST, SFC...)." },
               { id: "3.2", title: "Configuration SNCC/DCS", description: "Systèmes distribués complexes." },
@@ -75,7 +92,7 @@
             id: "4",
             title: "4. Intégration des Systèmes",
             description: "Assurer l'interopérabilité et la connexion.",
-            icon: "network",
+            icon: "hub",
             subSkills: [
               { id: "4.1", title: "Informatique Industrielle", description: "Bases de données (SQL), Scripts, Virtualisation." },
               { id: "4.2", title: "Intégration MES/ERP", description: "Passerelles IT/OT." },
@@ -87,7 +104,7 @@
             id: "5",
             title: "5. Validation Technique",
             description: "Vérifier la conformité par tests.",
-            icon: "check-circle-2",
+            icon: "check_circle",
             subSkills: [
               { id: "5.1", title: "Stratégie de Test", description: "Plans de validation." },
               { id: "5.2", title: "Simulation", description: "Jumeaux numériques, Virtual Commissioning." },
@@ -99,7 +116,7 @@
             id: "6",
             title: "6. Mise en Service",
             description: "Installation et démarrage sur site.",
-            icon: "play-circle",
+            icon: "play_circle",
             subSkills: [
               { id: "6.1", title: "Configuration Terrain", description: "Calibration, variateurs." },
               { id: "6.2", title: "I/O Checkout", description: "Tests de boucles, câblage." },
@@ -111,7 +128,7 @@
             id: "7",
             title: "7. Maintenance",
             description: "MCO et dépannage.",
-            icon: "wrench",
+            icon: "build",
             subSkills: [
               { id: "7.1", title: "Diagnostic", description: "Recherche de pannes." },
               { id: "7.2", title: "Préventif/Correctif", description: "Plans de maintenance." },
@@ -123,7 +140,7 @@
             id: "8",
             title: "8. Optimisation",
             description: "Amélioration continue.",
-            icon: "trending-up",
+            icon: "trending_up",
             subSkills: [
               { id: "8.1", title: "Performance (KPI)", description: "TRS, analyse de données." },
               { id: "8.2", title: "Efficacité Énergétique", description: "Optimisation conso." },
@@ -135,7 +152,7 @@
             id: "9",
             title: "9. Gestion de Projet",
             description: "Pilotage et organisation.",
-            icon: "briefcase",
+            icon: "work",
             subSkills: [
               { id: "9.1", title: "Méthodologie", description: "Cycle V, Agile." },
               { id: "9.2", title: "Planification", description: "Délais, ressources." },
@@ -147,7 +164,7 @@
             id: "10",
             title: "10. Soft Skills",
             description: "Humain et relationnel.",
-            icon: "users",
+            icon: "group",
             subSkills: [
               { id: "10.1", title: "Relation Client", description: "Posture conseil." },
               { id: "10.2", title: "Communication", description: "Reporting, synthèse." },
@@ -207,636 +224,4 @@
             id: 'focus_diag',
             label: 'Diagnostic',
             description: "Idéal pour identifier l'origine d'une panne (capteur, câble ou automate) sans modifier le programme.",
-            skills: ['2.1', '6.2', '7.1']
-          },
-          {
-            id: 'maintenance_expert',
-            label: 'Expertise Système',
-            description: "Idéal pour gagner en autonomie sur le diagnostic, comprendre l'architecture et modifier le code si nécessaire.",
-            skills: ['2.1', '3.1', '6.1', '7.1', '7.4'] 
-          },
-          {
-            id: 'data_supervision',
-            label: 'Data & 4.0',
-            description: "Idéal pour développer des IHM avancées, remonter les données (SQL) et sécuriser les réseaux.",
-            skills: ['2.5', '3.3', '4.1', '4.3', '8.1']
-          },
-          {
-            id: 'conception_new',
-            label: 'Bureau d\'Études',
-            description: "Idéal pour piloter des projets neufs, dimensionner les réseaux et structurer les programmes.",
-            skills: ['1.1', '2.2', '3.1', '3.4', '5.3', '9.1']
-          }
-        ];
-
-        // --- 2. ÉTAT GLOBAL (STATE) ---
-        const state = {
-            activeTab: 0,
-            selectedSkills: [], 
-            skillLevels: {}, 
-            preferences: { manufacturers: [], sectors: [] },
-            logistics: { selectedMonths: [], weeklyHours: 0, format: '' },
-            searchQuery: "",
-            expandedCategories: {} 
-        };
-
-        // --- 3. HELPER ICONES (OPTIMISATION) ---
-        // Génère le SVG directement pour éviter le saut visuel au chargement
-        function getIcon(name, size = 20, className = '') {
-            if (!window.lucide) return '';
-            
-            // Conversion kebab-case (ex: book-open) vers PascalCase (ex: BookOpen)
-            const pascalName = name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
-            
-            const iconNode = lucide.icons[pascalName];
-            if (!iconNode) {
-                console.warn(`Icon not found: ${name} -> ${pascalName}`);
-                return '';
-            }
-
-            // Génération SVG
-            return iconNode.toSvg({
-                width: size,
-                height: size,
-                class: className
-            });
-        }
-
-        // --- 4. LOGIQUE MÉTIER ---
-
-        function calculateDuration() {
-            if (!state.logistics.weeklyHours || !state.logistics.format) return null;
-
-            let minHours = 0, maxHours = 0;
-            switch (state.logistics.format) {
-                case 'express': minHours = 4; maxHours = 14; break;
-                case 'short': minHours = 14; maxHours = 35; break;
-                case 'medium': minHours = 35; maxHours = 150; break;
-                case 'long': minHours = 150; maxHours = 300; break;
-                default: return null;
-            }
-
-            const minWeeks = Math.ceil(minHours / state.logistics.weeklyHours);
-            const maxWeeks = Math.ceil(maxHours / state.logistics.weeklyHours);
-
-            if (state.logistics.format === 'long') return `> ${minWeeks} semaines`;
-            if (minWeeks === maxWeeks) return `${minWeeks} semaine${minWeeks > 1 ? 's' : ''}`;
-            return `${minWeeks} à ${maxWeeks} semaines`;
-        }
-
-        function getResolvedSelectedSkills() {
-            return state.selectedSkills.map(id => {
-                for (const cat of SKILLS_DATA) {
-                    const sub = cat.subSkills.find(s => s.id === id);
-                    if (sub) return { ...sub, categoryTitle: cat.title, categoryIcon: cat.icon };
-                }
-                return null;
-            }).filter(Boolean);
-        }
-
-        // --- 5. MOTEUR DE RENDU ---
-
-        function updateContainer(containerId, htmlContent) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-
-            // 1. Sauvegarde Focus & Scroll
-            const activeEl = document.activeElement;
-            const activeId = activeEl ? activeEl.id : null;
-            const selectionStart = activeEl && activeEl.value ? activeEl.selectionStart : null;
-            const selectionEnd = activeEl && activeEl.value ? activeEl.selectionEnd : null;
-
-            // Sauvegarde des positions de scroll des conteneurs internes
-            const scrollMap = new Map();
-            container.querySelectorAll('*').forEach((el, idx) => {
-                if (el.scrollTop > 0 || el.scrollLeft > 0) {
-                    // On utilise une clé simple basée sur le contenu ou l'ordre
-                    // Ici on essaye de mapper par ID s'il existe, sinon c'est approximatif
-                    if(el.id) scrollMap.set(el.id, { top: el.scrollTop, left: el.scrollLeft });
-                }
-            });
-
-            // 2. Mise à jour HTML
-            container.innerHTML = htmlContent;
-
-            // 3. Restauration Focus
-            if (activeId) {
-                const newActiveEl = document.getElementById(activeId);
-                if (newActiveEl) {
-                    newActiveEl.focus();
-                    if (selectionStart !== null && selectionEnd !== null && /text|search|password|tel|url/.test(newActiveEl.type)) {
-                        newActiveEl.setSelectionRange(selectionStart, selectionEnd);
-                    }
-                }
-            }
-
-            // 4. Restauration Scroll (si IDs présents)
-            scrollMap.forEach((pos, id) => {
-                const el = document.getElementById(id);
-                if(el) {
-                    el.scrollTop = pos.top;
-                    el.scrollLeft = pos.left;
-                }
-            });
-        }
-
-        function renderApp() {
-            renderHeader();
-            renderContent();
-        }
-
-        function renderHeader() {
-            const tabs = [
-                { id: 0, title: "1. Sélection", icon: "clipboard-list" },
-                { id: 1, title: "2. Priorisation", icon: "list-ordered" },
-                { id: 2, title: "3. Positionnement", icon: "signal" },
-                { id: 3, title: "4. Plan", icon: "calendar" }
-            ];
-
-            const html = `
-                <div class="max-w-5xl mx-auto">
-                    <div class="flex flex-col md:flex-row items-center justify-between px-4 py-4 md:py-0 md:h-20 gap-4">
-                        <div class="flex items-center gap-3 shrink-0 self-start md:self-auto pt-2 md:pt-0">
-                            <div class="p-2 bg-slate-800 rounded-lg shadow-sm text-white">
-                                ${getIcon('message-circle', 24)}
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-0.5">Entretien de découverte</p>
-                                <h1 class="text-xl font-bold leading-none text-slate-900">Automatique</h1>
-                            </div>
-                        </div>
-
-                        <nav id="nav-tabs" class="flex items-center gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
-                            ${tabs.map((tab, idx) => {
-                                const isActive = state.activeTab === idx;
-                                const isCompleted = state.activeTab > idx;
-                                const buttonClass = isActive 
-                                    ? 'bg-slate-800 text-white shadow-md' 
-                                    : isCompleted 
-                                        ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' 
-                                        : 'text-slate-500 hover:bg-slate-100';
-                                
-                                return `
-                                <button
-                                    onclick="actions.setActiveTab(${tab.id})"
-                                    class="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${buttonClass}"
-                                >
-                                    ${getIcon(tab.icon, 18)}
-                                    <span class="${isActive ? 'inline' : 'hidden md:inline'}">${tab.title}</span>
-                                    ${idx === 0 && state.selectedSkills.length > 0 ? `
-                                        <span class="ml-1 text-[10px] px-1.5 rounded-full ${isActive ? 'bg-white text-slate-800' : 'bg-slate-300 text-slate-800'}">
-                                            ${state.selectedSkills.length}
-                                        </span>
-                                    ` : ''}
-                                </button>
-                                `;
-                            }).join('')}
-                        </nav>
-                    </div>
-                </div>
-            `;
-            
-            updateContainer('app-header', html);
-        }
-
-        function renderContent() {
-            let html = '';
-            switch (state.activeTab) {
-                case 0: html = generateSelectionHTML(); break;
-                case 1: html = generatePrioritizationHTML(); break;
-                case 2: html = generatePositioningHTML(); break;
-                case 3: html = generatePlanHTML(); break;
-            }
-            updateContainer('app-content', html);
-        }
-
-        // --- GENERATEURS HTML ---
-
-        function generateSelectionHTML() {
-            const activePreset = PRESETS.find(preset => 
-                state.selectedSkills.length === preset.skills.length && 
-                preset.skills.every(id => state.selectedSkills.includes(id))
-            );
-
-            return `
-            <div class="fade-in">
-                <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm mb-6 sticky top-4 z-20 flex flex-col gap-4">
-                    <div class="flex flex-col md:flex-row gap-3 items-center w-full">
-                        <div class="relative flex-grow w-full">
-                            <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">
-                                ${getIcon('search', 16)}
-                            </span>
-                            <input
-                                id="search-input"
-                                type="text"
-                                oninput="actions.setSearchQuery(this.value)"
-                                value="${state.searchQuery}"
-                                class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 bg-slate-50"
-                                placeholder="Rechercher une compétence..."
-                            />
-                        </div>
-                        <div class="flex gap-2 shrink-0 self-end md:self-auto">
-                            <button onclick="actions.expandAll()" class="text-xs font-medium px-3 py-2 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors whitespace-nowrap">Tout ouvrir</button>
-                            <button onclick="actions.collapseAll()" class="text-xs font-medium px-3 py-2 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors whitespace-nowrap">Tout réduire</button>
-                        </div>
-                    </div>
-
-                    <div id="presets-list" class="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar border-t border-slate-100 pt-3 w-full">
-                        ${PRESETS.map(preset => {
-                            const isPresetActive = state.selectedSkills.length === preset.skills.length && preset.skills.every(id => state.selectedSkills.includes(id));
-                            const btnClass = isPresetActive 
-                                ? 'bg-slate-800 text-white border-slate-800 shadow-sm' 
-                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-400';
-                            
-                            return `
-                            <button
-                                onclick="actions.applyPreset('${preset.id}')"
-                                class="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap flex items-center gap-1.5 ${btnClass}"
-                            >
-                                ${preset.label}
-                            </button>
-                            `;
-                        }).join('')}
-                    </div>
-
-                    ${activePreset ? `
-                        <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 fade-in">
-                            <p class="text-sm text-slate-600 leading-relaxed">${activePreset.description}</p>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <div class="space-y-4">
-                    ${SKILLS_DATA.map(generateCategoryHTML).join('')}
-                </div>
-            </div>
-            `;
-        }
-
-        function generateCategoryHTML(category) {
-            const lowerQuery = state.searchQuery.toLowerCase();
-            const subMatch = category.subSkills.filter(sub => 
-                sub.title.toLowerCase().includes(lowerQuery) || 
-                sub.description.toLowerCase().includes(lowerQuery) ||
-                category.title.toLowerCase().includes(lowerQuery)
-            );
-            
-            if (state.searchQuery && subMatch.length === 0) return ''; 
-
-            const filteredSubSkills = state.searchQuery ? subMatch : category.subSkills;
-            
-            const allVisibleSelected = filteredSubSkills.length > 0 && filteredSubSkills.every(s => state.selectedSkills.includes(s.id));
-            const isExpanded = state.searchQuery ? true : !!state.expandedCategories[category.id];
-
-            return `
-            <div class="border rounded-lg bg-white shadow-sm mb-3 overflow-hidden border-slate-200">
-                <div 
-                    onclick="actions.toggleCategory('${category.id}')"
-                    class="w-full flex items-center justify-between p-4 cursor-pointer transition-colors ${isExpanded ? 'bg-slate-50' : 'bg-white hover:bg-slate-50'}"
-                >
-                    <div class="flex items-center gap-4 max-w-[85%]">
-                        <div onclick="event.stopPropagation(); actions.toggleAllInCategory('${category.id}', ${!allVisibleSelected})" class="cursor-pointer z-10 p-1 flex items-center justify-center">
-                            <input type="checkbox" ${allVisibleSelected ? 'checked' : ''} class="w-5 h-5 cursor-pointer accent-slate-800" />
-                        </div>
-                        <div class="p-2 rounded-md ${isExpanded ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'}">
-                            ${getIcon(category.icon, 20)}
-                        </div>
-                        <div>
-                            <h2 class="font-semibold text-lg ${isExpanded ? 'text-slate-900' : 'text-slate-700'}">${category.title}</h2>
-                            ${!isExpanded ? `<p class="text-sm text-slate-500 hidden sm:block">${category.description}</p>` : ''}
-                        </div>
-                    </div>
-                    <div class="text-slate-400">
-                        ${getIcon(isExpanded ? 'chevron-down' : 'chevron-right', 20)}
-                    </div>
-                </div>
-
-                ${isExpanded ? `
-                <div class="p-4 pt-2 border-t border-slate-100 bg-slate-50/50">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        ${filteredSubSkills.map(sub => {
-                            const isSelected = state.selectedSkills.includes(sub.id);
-                            const itemClass = isSelected 
-                                ? 'bg-slate-100 border-slate-500 ring-1 ring-slate-200' 
-                                : 'bg-white border-slate-200 hover:border-slate-400 hover:shadow-sm';
-                            
-                            return `
-                            <div 
-                                onclick="actions.toggleSkill('${sub.id}')"
-                                class="cursor-pointer border rounded-lg p-3 transition-all duration-200 flex items-start gap-3 relative ${itemClass}"
-                            >
-                                <div class="mt-0.5 flex-shrink-0">
-                                    <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 accent-slate-800 pointer-events-none" />
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-semibold mb-1 text-slate-800">${sub.title.replace(/^\d+\.\d+\.\s/, '')}</h3>
-                                    <p class="text-xs text-slate-500 line-clamp-2">${sub.description}</p>
-                                </div>
-                            </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-                ` : ''}
-            </div>
-            `;
-        }
-
-        function generatePrioritizationHTML() {
-            if (state.selectedSkills.length === 0) return `
-                <div class="text-center py-20 bg-white rounded-lg border border-slate-200 border-dashed slide-in">
-                    <p class="text-slate-500">Aucune compétence sélectionnée.</p>
-                    <button onclick="actions.setActiveTab(0)" class="text-slate-800 font-medium mt-2 hover:underline">Retourner à la sélection</button>
-                </div>
-            `;
-
-            const skills = getResolvedSelectedSkills();
-
-            return `
-            <div class="slide-in">
-                <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm mb-6">
-                    <div class="space-y-5">
-                        <div>
-                            <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
-                                ${getIcon('factory', 14)} Écosystèmes Constructeurs
-                            </label>
-                            <div class="flex flex-wrap gap-2">
-                                ${MANUFACTURER_OPTIONS.map(opt => `
-                                <button onclick="actions.togglePreference('manufacturers', '${opt}')"
-                                    class="px-3 py-1.5 rounded-md text-sm transition-all border ${state.preferences.manufacturers.includes(opt) ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
-                                    ${opt}
-                                </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                        <div>
-                            <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
-                                ${getIcon('shield-check', 14)} Secteurs Cibles
-                            </label>
-                            <div class="flex flex-wrap gap-2">
-                                ${SECTOR_OPTIONS.map(opt => `
-                                <button onclick="actions.togglePreference('sectors', '${opt}')"
-                                    class="px-3 py-1.5 rounded-md text-sm transition-all border ${state.preferences.sectors.includes(opt) ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
-                                    ${opt}
-                                </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between mb-2 mt-6">
-                    <h3 class="font-semibold text-slate-700">Ordre de priorité des compétences</h3>
-                    <span class="text-xs text-slate-400">Utiliser les flèches</span>
-                </div>
-
-                <div class="space-y-2">
-                    ${skills.map((skill, index) => `
-                    <div class="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex items-center justify-between group hover:border-slate-400 transition-colors">
-                        <div class="flex items-center gap-4 overflow-hidden">
-                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-500 font-bold text-xs shrink-0">${index + 1}</span>
-                            <div class="min-w-0">
-                                <h4 class="font-semibold text-slate-800 truncate">${skill.title}</h4>
-                                <div class="flex items-center gap-1.5 text-xs text-slate-500">
-                                    <span class="text-slate-400 inline-block align-middle">${getIcon(skill.categoryIcon, 14)}</span>
-                                    <span class="truncate">${skill.categoryTitle.replace(/^\d+\.\s*/, '')}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button onclick="actions.moveSkill(${index}, -1)" ${index === 0 ? 'disabled' : ''} class="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed">${getIcon('arrow-up', 18)}</button>
-                            <button onclick="actions.moveSkill(${index}, 1)" ${index === skills.length - 1 ? 'disabled' : ''} class="p-1.5 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed">${getIcon('arrow-down', 18)}</button>
-                            <div class="w-px h-4 bg-slate-200 mx-1"></div>
-                            <button onclick="actions.toggleSkill('${skill.id}')" class="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors">${getIcon('trash-2', 18)}</button>
-                        </div>
-                    </div>
-                    `).join('')}
-                </div>
-            </div>
-            `;
-        }
-
-        function generatePositioningHTML() {
-            if (state.selectedSkills.length === 0) return '<div class="text-center py-20"><p class="text-slate-500">Aucune compétence sélectionnée.</p></div>';
-            
-            const skills = getResolvedSelectedSkills();
-            
-            return `
-            <div class="slide-in space-y-6">
-                ${skills.map(skill => {
-                    const currentLevel = state.skillLevels[skill.id] || 0;
-                    return `
-                    <div class="bg-white p-5 border border-slate-200 rounded-lg shadow-sm">
-                        <div class="mb-4">
-                            <h4 class="font-bold text-slate-800 text-lg">${skill.title}</h4>
-                            <p class="text-sm text-slate-500">${skill.description}</p>
-                        </div>
-                        <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-                            ${LEVEL_DETAILS.map((level, idx) => {
-                                const isSelected = currentLevel === idx;
-                                const btnClass = isSelected 
-                                    ? 'bg-slate-800 border-slate-800 text-white shadow-md scale-105 z-10' 
-                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:bg-slate-50';
-                                return `
-                                <button onclick="actions.updateLevel('${skill.id}', ${idx})" class="relative flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 text-center ${btnClass}">
-                                    <div class="text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-slate-300' : 'text-slate-400'}">Niveau ${idx}</div>
-                                    <div class="font-bold text-sm mb-1 ${isSelected ? 'text-white' : 'text-slate-800'}">${level.label}</div>
-                                    <div class="text-[10px] ${isSelected ? 'text-slate-300' : 'text-slate-500'}">${level.hours}</div>
-                                </button>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                    `;
-                }).join('')}
-            </div>
-            `;
-        }
-
-        function generatePlanHTML() {
-            const durationEstimate = calculateDuration();
-
-            return `
-            <div class="slide-in max-w-2xl mx-auto">
-                <div class="bg-white p-8 border border-slate-200 rounded-xl shadow-lg">
-                    <h2 class="text-2xl font-bold text-slate-900 mb-6">Planification</h2>
-                    
-                    <div class="space-y-8">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-3">Période de disponibilité souhaitée</label>
-                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                                ${MONTHS.map((month, idx) => {
-                                    const isSelected = state.logistics.selectedMonths.includes(idx);
-                                    const btnClass = isSelected 
-                                        ? 'bg-slate-800 border-slate-800 text-white font-medium shadow-sm' 
-                                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:bg-slate-50';
-                                    return `
-                                    <button onclick="actions.toggleMonth(${idx})" class="py-2 px-1 text-sm rounded-lg border transition-all duration-200 ${btnClass}">
-                                        ${month}
-                                    </button>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-3">Rythme Hebdomadaire</label>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                                ${PACE_OPTIONS.map(opt => {
-                                    const isSelected = state.logistics.weeklyHours === opt.value;
-                                    const btnClass = isSelected 
-                                        ? 'bg-slate-800 border-slate-800 text-white shadow-md scale-105 z-10' 
-                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400 hover:bg-slate-50';
-                                    return `
-                                    <button onclick="actions.setLogistics('weeklyHours', ${opt.value})" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 ${btnClass}">
-                                        <span class="text-sm font-bold leading-tight">${opt.label}</span>
-                                        <span class="text-[11px] font-medium mt-1 ${isSelected ? 'text-slate-300' : 'text-slate-500'}">${opt.sub}</span>
-                                    </button>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-3">Format envisageable</label>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                ${FORMAT_OPTIONS.map(opt => {
-                                    const isSelected = state.logistics.format === opt.value;
-                                    const btnClass = isSelected 
-                                        ? 'bg-slate-800 border-slate-800 text-white shadow-md scale-105 z-10' 
-                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400 hover:bg-slate-50';
-                                    return `
-                                    <button onclick="actions.setLogistics('format', '${opt.value}')" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 ${btnClass}">
-                                        <span class="text-sm font-bold leading-tight">${opt.label}</span>
-                                        <span class="text-[11px] font-medium mt-1 ${isSelected ? 'text-slate-300' : 'text-slate-500'}">${opt.sub}</span>
-                                    </button>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-
-                        <div class="pt-6 border-t border-slate-100">
-                            <h3 class="font-semibold text-slate-900 mb-3">Récapitulatif Préliminaire</h3>
-                            <ul class="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-lg">
-                                <li class="flex justify-between">
-                                    <span>Compétences ciblées :</span>
-                                    <span class="font-medium text-slate-900">${state.selectedSkills.length}</span>
-                                </li>
-                                <li class="flex justify-between items-start">
-                                    <span>Période :</span>
-                                    <span class="font-medium text-slate-900 text-right max-w-[60%]">
-                                        ${state.logistics.selectedMonths.length > 0 
-                                            ? state.logistics.selectedMonths.sort((a,b)=>a-b).map(i => MONTHS[i]).join(', ') 
-                                            : 'Non définie'}
-                                    </span>
-                                </li>
-                                <li class="flex justify-between">
-                                    <span>Volume Hebdo :</span>
-                                    <span class="font-medium text-slate-900">${state.logistics.weeklyHours ? state.logistics.weeklyHours + 'h' : 'Non défini'}</span>
-                                </li>
-                                <li class="flex justify-between border-t border-slate-200 pt-2 mt-2">
-                                    <span class="text-slate-800 font-medium">Durée estimée :</span>
-                                    <span class="font-bold text-slate-800">${durationEstimate || '...'}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `;
-        }
-
-
-        // --- 6. ACTIONS (EVENT HANDLERS) ---
-
-        const actions = {
-            setActiveTab: (tabId) => {
-                state.activeTab = tabId;
-                renderApp();
-            },
-            setSearchQuery: (query) => {
-                state.searchQuery = query;
-                renderApp();
-            },
-            expandAll: () => {
-                SKILLS_DATA.forEach(c => state.expandedCategories[c.id] = true);
-                renderApp();
-            },
-            collapseAll: () => {
-                state.expandedCategories = {};
-                renderApp();
-            },
-            toggleCategory: (id) => {
-                state.expandedCategories[id] = !state.expandedCategories[id];
-                renderApp();
-            },
-            toggleSkill: (id) => {
-                if (state.selectedSkills.includes(id)) {
-                    state.selectedSkills = state.selectedSkills.filter(s => s !== id);
-                } else {
-                    state.selectedSkills.push(id);
-                }
-                renderApp();
-            },
-            toggleAllInCategory: (catId, shouldAdd) => {
-                const category = SKILLS_DATA.find(c => c.id === catId);
-                const ids = category.subSkills.map(s => s.id);
-                if (shouldAdd) {
-                    const newIds = ids.filter(id => !state.selectedSkills.includes(id));
-                    state.selectedSkills = [...state.selectedSkills, ...newIds];
-                } else {
-                    state.selectedSkills = state.selectedSkills.filter(id => !ids.includes(id));
-                }
-                renderApp();
-            },
-            applyPreset: (presetId) => {
-                const preset = PRESETS.find(p => p.id === presetId);
-                const isActive = state.selectedSkills.length === preset.skills.length && preset.skills.every(id => state.selectedSkills.includes(id));
-                state.selectedSkills = isActive ? [] : [...preset.skills];
-                renderApp();
-            },
-            togglePreference: (type, value) => {
-                const list = state.preferences[type];
-                if (list.includes(value)) {
-                    state.preferences[type] = list.filter(v => v !== value);
-                } else {
-                    state.preferences[type].push(value);
-                }
-                renderApp();
-            },
-            moveSkill: (index, dir) => {
-                if ((dir === -1 && index === 0) || (dir === 1 && index === state.selectedSkills.length - 1)) return;
-                const item = state.selectedSkills.splice(index, 1)[0];
-                state.selectedSkills.splice(index + dir, 0, item);
-                renderApp();
-            },
-            updateLevel: (skillId, level) => {
-                state.skillLevels[skillId] = level;
-                renderApp();
-            },
-            toggleMonth: (monthIndex) => {
-                const list = state.logistics.selectedMonths;
-                if (list.includes(monthIndex)) {
-                    state.logistics.selectedMonths = list.filter(m => m !== monthIndex);
-                } else {
-                    state.logistics.selectedMonths.push(monthIndex);
-                }
-                renderApp();
-            },
-            setLogistics: (key, value) => {
-                state.logistics[key] = value;
-                renderApp();
-            }
-        };
-
-        // Rendu initial (Démarrage)
-        // Attendre que Lucide soit chargé si possible, sinon rendre quand même
-        if (window.lucide) {
-            renderApp();
-        } else {
-            window.onload = renderApp;
-        }
-
-    </script>
-</body>
-</html>
+            skills: ['2.1', '
